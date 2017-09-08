@@ -22,8 +22,8 @@ from testtools.matchers import (
     FileContains
     )
 
-from subunit import _to_disk
-from subunit.v2 import StreamResultToBytes
+from pysubunit import _to_disk
+from pysubunit.v2 import StreamResultToBytes
 
 class SmokeTest(TestCase):
 

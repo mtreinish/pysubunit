@@ -18,8 +18,8 @@ import unittest
 
 from testtools.compat import _b, StringIO
 
-import subunit.tests
-from subunit import content, content_type, details
+import pysubunit.tests
+from pysubunit import content, content_type, details
 
 
 class TestSimpleDetails(unittest.TestCase):

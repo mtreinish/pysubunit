@@ -19,7 +19,7 @@ from tempfile import NamedTemporaryFile
 
 from testtools import TestCase
 
-from subunit.filters import find_stream
+from pysubunit.filters import find_stream
 
 
 class TestFindStream(TestCase):

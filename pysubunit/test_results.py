@@ -195,7 +195,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         time = self._time
         if time is not None:
             return
-        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
+        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.UTC)
         self.decorated.time(time)
 
     def progress(self, offset, whence):

@@ -558,9 +558,9 @@ class TestProtocolServer(object):
         # Accept it, but do not do anything with it yet.
         try:
             event_time = iso8601.parse_date(line[offset:-1])
-        except TypeError:
+        except (TypeError, iso8601.ParseError) as e:
             raise TypeError(_u("Failed to parse %r, got %r")
-                % (line, sys.exec_info[1]))
+                % (line, e))
         self.client.time(event_time)
 
     def lineReceived(self, line):
@@ -800,7 +800,7 @@ class TestProtocolClient(testresult.TestResult):
 
         ":param datetime: A datetime.datetime object.
         """
-        time = a_datetime.astimezone(iso8601.Utc())
+        time = a_datetime.astimezone(iso8601.UTC)
         self._stream.write(_b("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
             time.year, time.month, time.day, time.hour, time.minute,
             time.second, time.microsecond)))

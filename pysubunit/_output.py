@@ -22,8 +22,9 @@ from optparse import (
 )
 import sys
 
+import iso8601
+
 from pysubunit import make_stream_binary
-from pysubunit.iso8601 import UTC
 from pysubunit.v2 import StreamResultToBytes
 
 
@@ -200,4 +201,4 @@ def generate_stream_results(args, output_writer):
 
 
 def create_timestamp():
-    return datetime.datetime.now(UTC)
+    return datetime.datetime.now(iso8601.UTC)

@@ -49,7 +49,7 @@ FLAG_TAGS = 0x0080
 FLAG_MIME_TYPE = 0x0020
 FLAG_EOF = 0x0010
 FLAG_FILE_CONTENT = 0x0040
-EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
+EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.UTC)
 NUL_ELEMENT = b'\0'[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}
@@ -103,7 +103,7 @@ class StreamResultToBytes(object):
             The stream will be passed through subunit.make_stream_binary,
             to handle regular cases such as stdout.
         """
-        self.output_stream = subunit.make_stream_binary(output_stream)
+        self.output_stream = pysubunit.make_stream_binary(output_stream)
 
     def startTestRun(self):
         pass
@@ -269,7 +269,7 @@ class ByteStreamToStreamResult(object):
             labelled with this name.
         """
         self.non_subunit_name = non_subunit_name
-        self.source = subunit.make_stream_binary(source)
+        self.source = pysubunit.make_stream_binary(source)
         self.codec = codecs.lookup('utf8').incrementaldecoder()
 
     def run(self, result):

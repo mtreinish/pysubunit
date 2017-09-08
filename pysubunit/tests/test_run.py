@@ -22,9 +22,9 @@ from testtools.compat import _b
 from testtools.matchers import StartsWith
 from testtools.testresult.doubles import StreamResult
 
-import subunit
-from subunit import run
-from subunit.run import SubunitTestRunner
+import pysubunit
+from pysubunit import run
+from pysubunit.run import SubunitTestRunner
 
 
 class TestSubunitTestRunner(TestCase):
@@ -36,7 +36,7 @@ class TestSubunitTestRunner(TestCase):
         runner.run(test)
         bytestream.seek(0)
         eventstream = StreamResult()
-        subunit.ByteStreamToStreamResult(bytestream).run(eventstream)
+        pysubunit.ByteStreamToStreamResult(bytestream).run(eventstream)
         timestamps = [event[-1] for event in eventstream._events
             if event is not None]
         self.assertNotEqual([], timestamps)
@@ -50,7 +50,7 @@ class TestSubunitTestRunner(TestCase):
         runner.run(case)
         bytestream.seek(0)
         eventstream = StreamResult()
-        subunit.ByteStreamToStreamResult(bytestream).run(eventstream)
+        pysubunit.ByteStreamToStreamResult(bytestream).run(eventstream)
         self.assertEqual([
             ('status', 'name1', 'exists'),
             ('status', 'name2', 'exists'),
@@ -86,7 +86,7 @@ class TestSubunitTestRunner(TestCase):
         stream = io.TextIOWrapper(bytestream, encoding="utf8")
         try:
             self.assertEqual(None, run.main(
-                argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.FailingTest"],
+                argv=["progName", "pysubunit.tests.test_run.TestSubunitTestRunner.FailingTest"],
                 stdout=stream))
         except SystemExit:
             self.fail("SystemExit raised")
@@ -100,6 +100,6 @@ class TestSubunitTestRunner(TestCase):
         bytestream = io.BytesIO()
         stream = io.TextIOWrapper(bytestream, encoding="utf8")
         exc = self.assertRaises(SystemExit, run.main,
-                argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.ExitingTest"],
+                argv=["progName", "pysubunit.tests.test_run.TestSubunitTestRunner.ExitingTest"],
                 stdout=stream)
         self.assertEqual(0, exc.args[0])

@@ -23,7 +23,7 @@ from testtools import TestCase
 from testtools.compat import _u
 from testtools.testresult.doubles import StreamResult
 
-import subunit
+import pysubunit
 
 UTF8_TEXT = 'text/plain; charset=UTF8'
 
@@ -49,7 +49,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a single skipped test.
         self.tap.write(_u("1..0 # Skipped: entire file skipped\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'file skip', 'skip', None, True,
             'tap comment', b'Skipped: entire file skipped', True, None, None,
@@ -63,7 +63,7 @@ class TestTAP2SubUnit(TestCase):
         # stream).
         self.tap.write(_u("ok\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'success', None, False, None,
             None, True, None, None, None)])
@@ -74,7 +74,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a passed test with name 'test 1'
         self.tap.write(_u("ok 1\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'success', None, False, None,
             None, True, None, None, None)])
@@ -85,7 +85,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a passed test with name 'test 1 - There is a description'
         self.tap.write(_u("ok 1 - There is a description\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1 - There is a description',
             'success', None, False, None, None, True, None, None, None)])
@@ -96,7 +96,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a passed test with name 'test 1 There is a description'
         self.tap.write(_u("ok There is a description\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1 There is a description',
             'success', None, False, None, None, True, None, None, None)])
@@ -107,7 +107,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a skkip test with name 'test 1'
         self.tap.write(_u("ok # SKIP\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'skip', None, False, None,
             None, True, None, None, None)])
@@ -115,7 +115,7 @@ class TestTAP2SubUnit(TestCase):
     def test_ok_skip_number_comment_lowercase(self):
         self.tap.write(_u("ok 1 # skip no samba environment available, skipping compilation\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'skip', None, False, 'tap comment',
             b'no samba environment available, skipping compilation', True,
@@ -128,7 +128,7 @@ class TestTAP2SubUnit(TestCase):
         # Not done yet
         self.tap.write(_u("ok 1 foo  # SKIP Not done yet\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1 foo', 'skip', None, False,
             'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
@@ -140,7 +140,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a skip test with name 'test 1' and a log of Not done yet
         self.tap.write(_u("ok # SKIP Not done yet\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'skip', None, False,
             'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
@@ -152,7 +152,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a xfail test with name 'test 1'
         self.tap.write(_u("ok # TODO\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'xfail', None, False, None,
             None, True, None, None, None)])
@@ -163,7 +163,7 @@ class TestTAP2SubUnit(TestCase):
         # results in a xfail test with name 'test 1' and a log of Not done yet
         self.tap.write(_u("ok # TODO Not done yet\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([('status', 'test 1', 'xfail', None, False,
             'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
@@ -176,7 +176,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u("ok 1 foo\n"))
         self.tap.write(_u("Bail out! Lifejacket engaged\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 foo', 'success', None, False, None, None, True,
@@ -194,7 +194,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('ok first test\n'))
         self.tap.write(_u('not ok second test\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 first test', 'success', None, False, None,
@@ -215,7 +215,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('ok first test\n'))
         self.tap.write(_u('not ok 3 third test\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 first test', 'success', None, False, None, None,
@@ -234,7 +234,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('ok first test\n'))
         self.tap.write(_u('not ok 3 third test\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 first test', 'success', None, False, None, None,
@@ -259,7 +259,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('not ok 4 - fourth\n'))
         self.tap.write(_u('1..4\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 - first test in a script with trailing plan',
@@ -285,7 +285,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('ok 3 - third\n'))
         self.tap.write(_u('not ok 4 - fourth\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 - first test in a script with a plan',
@@ -309,7 +309,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u('ok 3 - third\n'))
         self.tap.write(_u('not ok 4 - fourth\n'))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1 - first test in a script with no plan at all',
@@ -329,11 +329,11 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u("not ok 1 - a fail but # TODO but is TODO\n"))
         self.tap.write(_u("not ok 2 - another fail # SKIP instead\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.subunit.seek(0)
         events = StreamResult()
-        subunit.ByteStreamToStreamResult(self.subunit).run(events)
+        pysubunit.ByteStreamToStreamResult(self.subunit).run(events)
         self.check_events([
             ('status', 'test 1 - a fail but', 'xfail', None, False,
              'tap comment', b'but is TODO', True, 'text/plain; charset=UTF8',
@@ -353,7 +353,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u("ok\n"))
         self.tap.write(_u("ok\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1', 'success', None, False, 'tap comment',
@@ -372,7 +372,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.write(_u("ok\n"))
         self.tap.write(_u("# comment\n"))
         self.tap.seek(0)
-        result = subunit.TAP2SubUnit(self.tap, self.subunit)
+        result = pysubunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.check_events([
             ('status', 'test 1', 'success', None, False, None, None, True,
@@ -383,5 +383,5 @@ class TestTAP2SubUnit(TestCase):
     def check_events(self, events):
         self.subunit.seek(0)
         eventstream = StreamResult()
-        subunit.ByteStreamToStreamResult(self.subunit).run(eventstream)
+        pysubunit.ByteStreamToStreamResult(self.subunit).run(eventstream)
         self.assertEqual(events, eventstream._events)

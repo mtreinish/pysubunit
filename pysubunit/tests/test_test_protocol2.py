@@ -1,5 +1,5 @@
 #
-#  subunit: extensions to Python unittest to get test results from subprocesses.
+#  pysubunit: extensions to Python unittest to get test results from subprocesses.
 #  Copyright (C) 2013  Robert Collins <robertc@robertcollins.net>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
@@ -17,6 +17,7 @@
 from io import BytesIO
 import datetime
 
+import iso8601
 try:
     from hypothesis import given
 # To debug hypothesis
@@ -31,8 +32,7 @@ from testtools.matchers import Contains, HasLength
 from testtools.tests.test_testresult import TestStreamResultContract
 from testtools.testresult.doubles import StreamResult
 
-import subunit
-import subunit.iso8601 as iso8601
+import pysubunit
 
 CONSTANT_ENUM = b'\xb3)\x01\x0c\x03foo\x08U_\x1b'
 CONSTANT_INPROGRESS = b'\xb3)\x02\x0c\x03foo\x8e\xc1-\xb5'
@@ -57,17 +57,17 @@ class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
     """Check that StreamResult behaves as testtools expects."""
 
     def _make_result(self):
-        return subunit.StreamResultToBytes(BytesIO())
+        return pysubunit.StreamResultToBytes(BytesIO())
 
 
 class TestStreamResultToBytes(TestCase):
 
     def _make_result(self):
         output = BytesIO()
-        return subunit.StreamResultToBytes(output), output
+        return pysubunit.StreamResultToBytes(output), output
 
     def test_numbers(self):
-        result = subunit.StreamResultToBytes(BytesIO())
+        result = pysubunit.StreamResultToBytes(BytesIO())
         packet = []
         self.assertRaises(Exception, result._write_number, -1, packet)
         self.assertEqual([], packet)
@@ -218,7 +218,7 @@ class TestStreamResultToBytes(TestCase):
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
-            iso8601.Utc())
+            iso8601.UTC)
         result, output = self._make_result()
         result.status(test_id="bar", test_status='success', timestamp=timestamp)
         self.assertEqual(CONSTANT_TIMESTAMP, output.getvalue())
@@ -226,10 +226,10 @@ class TestStreamResultToBytes(TestCase):
 
 class TestByteStreamToStreamResult(TestCase):
 
-    def test_non_subunit_encapsulated(self):
+    def test_non_pysubunit_encapsulated(self):
         source = BytesIO(b"foo\nbar\n")
         result = StreamResult()
-        subunit.ByteStreamToStreamResult(
+        pysubunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual([
             ('status', None, None, None, True, 'stdout', b'f', False, None, None, None),
@@ -248,7 +248,7 @@ class TestByteStreamToStreamResult(TestCase):
         source = BytesIO(utf8_bytes)
         # Should be treated as one character (it is u'\u3cca') and wrapped
         result = StreamResult()
-        subunit.ByteStreamToStreamResult(
+        pysubunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(
             result)
         self.assertEqual([
@@ -260,7 +260,7 @@ class TestByteStreamToStreamResult(TestCase):
     def test_non_subunit_disabled_raises(self):
         source = BytesIO(b"foo\nbar\n")
         result = StreamResult()
-        case = subunit.ByteStreamToStreamResult(source)
+        case = pysubunit.ByteStreamToStreamResult(source)
         e = self.assertRaises(Exception, case.run, result)
         self.assertEqual(b'f', e.args[1])
         self.assertEqual(b'oo\nbar\n', source.read())
@@ -269,7 +269,7 @@ class TestByteStreamToStreamResult(TestCase):
     def test_trivial_enumeration(self):
         source = BytesIO(CONSTANT_ENUM)
         result = StreamResult()
-        subunit.ByteStreamToStreamResult(
+        pysubunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual([
@@ -279,7 +279,7 @@ class TestByteStreamToStreamResult(TestCase):
     def test_multiple_events(self):
         source = BytesIO(CONSTANT_ENUM + CONSTANT_ENUM)
         result = StreamResult()
-        subunit.ByteStreamToStreamResult(
+        pysubunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual([
@@ -308,7 +308,7 @@ class TestByteStreamToStreamResult(TestCase):
     def check_events(self, source_bytes, events):
         source = BytesIO(source_bytes)
         result = StreamResult()
-        subunit.ByteStreamToStreamResult(
+        pysubunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual(events, result._events)
@@ -382,7 +382,7 @@ class TestByteStreamToStreamResult(TestCase):
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
-            iso8601.Utc())
+            iso8601.UTC)
         self.check_event(CONSTANT_TIMESTAMP,
             'success', test_id='bar', timestamp=timestamp)
 
@@ -438,7 +438,7 @@ class TestByteStreamToStreamResult(TestCase):
 
     def test_route_code_and_file_content(self):
         content = BytesIO()
-        subunit.StreamResultToBytes(content).status(
+        pysubunit.StreamResultToBytes(content).status(
             route_code='0', mime_type='text/plain', file_name='bar',
             file_bytes=b'foo')
         self.check_event(content.getvalue(), test_id=None, file_name='bar',
@@ -449,7 +449,7 @@ class TestByteStreamToStreamResult(TestCase):
         def test_hypothesis_decoding(self, code_bytes):
             source = BytesIO(code_bytes)
             result = StreamResult()
-            stream = subunit.ByteStreamToStreamResult(
+            stream = pysubunit.ByteStreamToStreamResult(
                 source, non_subunit_name="stdout")
             stream.run(result)
             self.assertEqual(b'', source.read())

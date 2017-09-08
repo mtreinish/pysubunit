@@ -22,6 +22,8 @@ import sys
 from tempfile import NamedTemporaryFile
 
 from contextlib import contextmanager
+import iso8601
+from testscenarios import load_tests_apply_scenarios as load_tests
 from testtools import TestCase
 from testtools.compat import _u
 from testtools.matchers import (
@@ -34,15 +36,14 @@ from testtools.matchers import (
 )
 from testtools.testresult.doubles import StreamResult
 
-from subunit.iso8601 import UTC
-from subunit.v2 import StreamResultToBytes, ByteStreamToStreamResult
-from subunit._output import (
+from pysubunit.v2 import StreamResultToBytes, ByteStreamToStreamResult
+from pysubunit._output import (
     _ALL_ACTIONS,
     _FINAL_ACTIONS,
     generate_stream_results,
     parse_arguments,
 )
-import subunit._output as _o
+import pysubunit._output as _o
 
 
 class SafeOptionParser(optparse.OptionParser):
@@ -204,7 +205,7 @@ class StatusStreamResultTests(TestCase):
         (s, dict(status=s, option='--' + s)) for s in _ALL_ACTIONS
     ]
 
-    _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
+    _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, iso8601.UTC)
 
     def setUp(self):
         super(StatusStreamResultTests, self).setUp()
@@ -521,7 +522,8 @@ class FileDataTests(TestCase):
             )
 
     def test_files_have_timestamp(self):
-        _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
+        _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0,
+                                             iso8601.UTC)
         self.patch(_o, 'create_timestamp', lambda: _dummy_timestamp)
 
         with temp_file_contents(b"Hello") as f:

@@ -19,7 +19,7 @@ import unittest
 
 from testtools.compat import _b, BytesIO
 
-import subunit.chunked
+import pysubunit.chunked
 
 
 class TestDecode(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestDecode(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.output = BytesIO()
-        self.decoder = subunit.chunked.Decoder(self.output)
+        self.decoder = pysubunit.chunked.Decoder(self.output)
 
     def test_close_read_length_short_errors(self):
         self.assertRaises(ValueError, self.decoder.close)
@@ -85,7 +85,7 @@ class TestDecode(unittest.TestCase):
     def test_decode_newline_nonstrict(self):
         """Tolerate chunk markers with no CR character."""
         # From <http://pad.lv/505078>
-        self.decoder = subunit.chunked.Decoder(self.output, strict=False)
+        self.decoder = pysubunit.chunked.Decoder(self.output, strict=False)
         self.assertEqual(None, self.decoder.write(_b('a\n')))
         self.assertEqual(None, self.decoder.write(_b('abcdeabcde')))
         self.assertEqual(_b(''), self.decoder.write(_b('0\n')))
@@ -111,7 +111,7 @@ class TestEncode(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.output = BytesIO()
-        self.encoder = subunit.chunked.Encoder(self.output)
+        self.encoder = pysubunit.chunked.Encoder(self.output)
 
     def test_encode_nothing(self):
         self.encoder.close()

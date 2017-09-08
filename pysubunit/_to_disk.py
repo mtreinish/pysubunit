@@ -22,7 +22,7 @@ from textwrap import dedent
 
 from testtools import StreamToDict
 
-from subunit.filters import run_tests_from_stream
+from pysubunit.filters import run_tests_from_stream
 
 
 def _allocate_path(root, sub):

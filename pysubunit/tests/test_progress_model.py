@@ -16,8 +16,8 @@
 
 import unittest
 
-import subunit
-from subunit.progress_model import ProgressModel
+import pysubunit
+from pysubunit.progress_model import ProgressModel
 
 
 class TestProgressModel(unittest.TestCase):

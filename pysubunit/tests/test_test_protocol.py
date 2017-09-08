@@ -18,6 +18,7 @@ import datetime
 import unittest2 as unittest
 import os
 
+import iso8601
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u, BytesIO
 from testtools.content import Content, TracebackContent, text_content
@@ -36,13 +37,12 @@ except ImportError:
         )
 from testtools.matchers import Contains
 
-import subunit
-from subunit.tests import (
+import pysubunit
+from pysubunit.tests import (
     _remote_exception_repr,
     _remote_exception_str,
     _remote_exception_str_chunked,
     )
-import subunit.iso8601 as iso8601
 
 
 tb_prelude = "Traceback (most recent call last):\n" 
@@ -55,20 +55,20 @@ def details_to_str(details):
 class TestTestImports(unittest.TestCase):
 
     def test_imports(self):
-        from subunit import DiscardStream
-        from subunit import TestProtocolServer
-        from subunit import RemotedTestCase
-        from subunit import RemoteError
-        from subunit import ExecTestCase
-        from subunit import IsolatedTestCase
-        from subunit import TestProtocolClient
-        from subunit import ProtocolTestCase
+        from pysubunit import DiscardStream
+        from pysubunit import TestProtocolServer
+        from pysubunit import RemotedTestCase
+        from pysubunit import RemoteError
+        from pysubunit import ExecTestCase
+        from pysubunit import IsolatedTestCase
+        from pysubunit import TestProtocolClient
+        from pysubunit import ProtocolTestCase
 
 
 class TestDiscardStream(unittest.TestCase):
 
     def test_write(self):
-        subunit.DiscardStream().write("content")
+        pysubunit.DiscardStream().write("content")
 
 
 class TestProtocolServerForward(unittest.TestCase):
@@ -76,7 +76,7 @@ class TestProtocolServerForward(unittest.TestCase):
     def test_story(self):
         client = unittest.TestResult()
         out = BytesIO()
-        protocol = subunit.TestProtocolServer(client, forward_stream=out)
+        protocol = pysubunit.TestProtocolServer(client, forward_stream=out)
         pipe = BytesIO(_b("test old mcdonald\n"
                         "success old mcdonald\n"))
         protocol.readFrom(pipe)
@@ -86,8 +86,8 @@ class TestProtocolServerForward(unittest.TestCase):
     def test_not_command(self):
         client = unittest.TestResult()
         out = BytesIO()
-        protocol = subunit.TestProtocolServer(client,
-            stream=subunit.DiscardStream(), forward_stream=out)
+        protocol = pysubunit.TestProtocolServer(client,
+            stream=pysubunit.DiscardStream(), forward_stream=out)
         pipe = BytesIO(_b("success old mcdonald\n"))
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 0)
@@ -98,7 +98,7 @@ class TestTestProtocolServerPipe(unittest.TestCase):
 
     def test_story(self):
         client = unittest.TestResult()
-        protocol = subunit.TestProtocolServer(client)
+        protocol = pysubunit.TestProtocolServer(client)
         traceback = "foo.c:53:ERROR invalid state\n"
         pipe = BytesIO(_b("test old mcdonald\n"
                         "success old mcdonald\n"
@@ -109,8 +109,8 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                         "test an error\n"
                         "error an error\n"))
         protocol.readFrom(pipe)
-        bing = subunit.RemotedTestCase("bing crosby")
-        an_error = subunit.RemotedTestCase("an error")
+        bing = pysubunit.RemotedTestCase("bing crosby")
+        an_error = pysubunit.RemotedTestCase("an error")
         self.assertEqual(
             client.errors,
             [(an_error, tb_prelude + _remote_exception_repr + '\n')])
@@ -129,22 +129,22 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
     def setUp(self):
         self.client = Python26TestResult()
         self.stream = BytesIO()
-        self.protocol = subunit.TestProtocolServer(self.client, self.stream)
+        self.protocol = pysubunit.TestProtocolServer(self.client, self.stream)
 
     def test_start_test(self):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
         self.assertEqual(self.client._events,
-            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
+            [('startTest', pysubunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_testing(self):
         self.protocol.lineReceived(_b("testing old mcdonald\n"))
         self.assertEqual(self.client._events,
-            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
+            [('startTest', pysubunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_test_colon(self):
         self.protocol.lineReceived(_b("test: old mcdonald\n"))
         self.assertEqual(self.client._events,
-            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
+            [('startTest', pysubunit.RemotedTestCase("old mcdonald"))])
 
     def test_indented_test_colon_ignored(self):
         ignored_line = _b(" test: old mcdonald\n")
@@ -155,16 +155,16 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
     def test_start_testing_colon(self):
         self.protocol.lineReceived(_b("testing: old mcdonald\n"))
         self.assertEqual(self.client._events,
-            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
+            [('startTest', pysubunit.RemotedTestCase("old mcdonald"))])
 
 
 class TestTestProtocolServerPassThrough(unittest.TestCase):
 
     def setUp(self):
         self.stdout = BytesIO()
-        self.test = subunit.RemotedTestCase("old mcdonald")
+        self.test = pysubunit.RemotedTestCase("old mcdonald")
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client, self.stdout)
+        self.protocol = pysubunit.TestProtocolServer(self.client, self.stdout)
 
     def keywords_before_test(self):
         self.protocol.lineReceived(_b("failure a\n"))
@@ -299,8 +299,8 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
 
     def setUp(self):
         self.client = Python26TestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
-        self.test = subunit.RemotedTestCase("old mcdonald")
+        self.protocol = pysubunit.TestProtocolServer(self.client)
+        self.test = pysubunit.RemotedTestCase("old mcdonald")
 
     def test_lost_connection_no_input(self):
         self.protocol.lostConnection()
@@ -309,7 +309,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
     def test_lost_connection_after_start(self):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
         self.protocol.lostConnection()
-        failure = subunit.RemoteError(
+        failure = pysubunit.RemoteError(
             _u("lost connection during test 'old mcdonald'"))
         self.assertEqual([
             ('startTest', self.test),
@@ -323,7 +323,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lostConnection()
         self.assertEqual([
             ('startTest', self.test),
-            ('addError', self.test, subunit.RemoteError(_u(""))),
+            ('addError', self.test, pysubunit.RemoteError(_u(""))),
             ('stopTest', self.test),
             ], self.client._events)
 
@@ -331,7 +331,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
         self.protocol.lineReceived(_b("%s old mcdonald %s" % (outcome, opening)))
         self.protocol.lostConnection()
-        failure = subunit.RemoteError(
+        failure = pysubunit.RemoteError(
             _u("lost connection during %s report of test 'old mcdonald'") %
             outcome)
         self.assertEqual([
@@ -352,7 +352,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lostConnection()
         self.assertEqual([
             ('startTest', self.test),
-            ('addFailure', self.test, subunit.RemoteError(_u(""))),
+            ('addFailure', self.test, pysubunit.RemoteError(_u(""))),
             ('stopTest', self.test),
             ], self.client._events)
 
@@ -401,9 +401,9 @@ class TestInTestMultipart(unittest.TestCase):
 
     def setUp(self):
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
-        self.test = subunit.RemotedTestCase(_u("mcdonalds farm"))
+        self.test = pysubunit.RemotedTestCase(_u("mcdonalds farm"))
 
     def test__outcome_sets_details_parser(self):
         self.protocol._reading_success_details.details_parser = None
@@ -412,16 +412,16 @@ class TestInTestMultipart(unittest.TestCase):
         parser = self.protocol._reading_success_details.details_parser
         self.assertNotEqual(None, parser)
         self.assertTrue(isinstance(parser,
-            subunit.details.MultipartDetailsParser))
+            pysubunit.details.MultipartDetailsParser))
 
 
 class TestTestProtocolServerAddError(unittest.TestCase):
 
     def setUp(self):
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
-        self.test = subunit.RemotedTestCase("mcdonalds farm")
+        self.test = pysubunit.RemotedTestCase("mcdonalds farm")
 
     def simple_error_keyword(self, keyword):
         self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
@@ -474,9 +474,9 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
 
     def setUp(self):
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
-        self.test = subunit.RemotedTestCase("mcdonalds farm")
+        self.test = pysubunit.RemotedTestCase("mcdonalds farm")
 
     def assertFailure(self, details):
         self.assertEqual([
@@ -547,7 +547,7 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 
     def setup_protocol(self):
         """Setup the protocol based on self.client."""
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = self.client._events[-1][-1]
 
@@ -572,9 +572,9 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
                 value = details
             else:
                 if error_message is not None:
-                    value = subunit.RemoteError(details_to_str(details))
+                    value = pysubunit.RemoteError(details_to_str(details))
                 else:
-                    value = subunit.RemoteError()
+                    value = pysubunit.RemoteError()
             self.assertEqual([
                 ('startTest', self.test),
                 ('addExpectedFailure', self.test, value),
@@ -658,7 +658,7 @@ class TestTestProtocolServerAddunexpectedSuccess(TestCase):
 
     def setup_protocol(self):
         """Setup the protocol based on self.client."""
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = self.client._events[-1][-1]
 
@@ -760,7 +760,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
     def setUp(self):
         """Setup a test object ready to be skipped."""
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = self.client._events[-1][-1]
 
@@ -809,9 +809,9 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def setUp(self):
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(_b("test mcdonalds farm\n"))
-        self.test = subunit.RemotedTestCase("mcdonalds farm")
+        self.test = pysubunit.RemotedTestCase("mcdonalds farm")
 
     def simple_success_keyword(self, keyword):
         self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
@@ -866,7 +866,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
     def test_progress_accepted_stdlib(self):
         self.result = Python26TestResult()
         self.stream = BytesIO()
-        self.protocol = subunit.TestProtocolServer(self.result,
+        self.protocol = pysubunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived(_b("progress: 23"))
         self.protocol.lineReceived(_b("progress: -2"))
@@ -877,7 +877,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
         # With a progress capable TestResult, progress events are emitted.
         self.result = ExtendedTestResult()
         self.stream = BytesIO()
-        self.protocol = subunit.TestProtocolServer(self.result,
+        self.protocol = pysubunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived(_b("progress: 23"))
         self.protocol.lineReceived(_b("progress: push"))
@@ -886,11 +886,11 @@ class TestTestProtocolServerProgress(unittest.TestCase):
         self.protocol.lineReceived(_b("progress: +4"))
         self.assertEqual(_b(""), self.stream.getvalue())
         self.assertEqual([
-            ('progress', 23, subunit.PROGRESS_SET),
-            ('progress', None, subunit.PROGRESS_PUSH),
-            ('progress', -2, subunit.PROGRESS_CUR),
-            ('progress', None, subunit.PROGRESS_POP),
-            ('progress', 4, subunit.PROGRESS_CUR),
+            ('progress', 23, pysubunit.PROGRESS_SET),
+            ('progress', None, pysubunit.PROGRESS_PUSH),
+            ('progress', -2, pysubunit.PROGRESS_CUR),
+            ('progress', None, pysubunit.PROGRESS_POP),
+            ('progress', 4, pysubunit.PROGRESS_CUR),
             ], self.result._events)
 
 
@@ -899,7 +899,7 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
 
     def setUp(self):
         self.client = ExtendedTestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol = pysubunit.TestProtocolServer(self.client)
 
     def test_initial_tags(self):
         self.protocol.lineReceived(_b("tags: foo bar:baz  quux\n"))
@@ -938,7 +938,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
     def test_time_accepted_stdlib(self):
         self.result = Python26TestResult()
         self.stream = BytesIO()
-        self.protocol = subunit.TestProtocolServer(self.result,
+        self.protocol = pysubunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived(_b("time: 2001-12-12 12:59:59Z\n"))
         self.assertEqual(_b(""), self.stream.getvalue())
@@ -946,28 +946,28 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
     def test_time_accepted_extended(self):
         self.result = ExtendedTestResult()
         self.stream = BytesIO()
-        self.protocol = subunit.TestProtocolServer(self.result,
+        self.protocol = pysubunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived(_b("time: 2001-12-12 12:59:59Z\n"))
         self.assertEqual(_b(""), self.stream.getvalue())
         self.assertEqual([
             ('time', datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
-            iso8601.Utc()))
+            iso8601.UTC))
             ], self.result._events)
 
 
 class TestRemotedTestCase(unittest.TestCase):
 
     def test_simple(self):
-        test = subunit.RemotedTestCase("A test description")
+        test = pysubunit.RemotedTestCase("A test description")
         self.assertRaises(NotImplementedError, test.setUp)
         self.assertRaises(NotImplementedError, test.tearDown)
         self.assertEqual("A test description",
                          test.shortDescription())
         self.assertEqual("A test description",
                          test.id())
-        self.assertEqual("A test description (subunit.RemotedTestCase)", "%s" % test)
-        self.assertEqual("<subunit.RemotedTestCase description="
+        self.assertEqual("A test description (pysubunit.RemotedTestCase)", "%s" % test)
+        self.assertEqual("<pysubunit.RemotedTestCase description="
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
@@ -975,9 +975,9 @@ class TestRemotedTestCase(unittest.TestCase):
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)
-        another_test = subunit.RemotedTestCase("A test description")
+        another_test = pysubunit.RemotedTestCase("A test description")
         self.assertEqual(test, another_test)
-        different_test = subunit.RemotedTestCase("ofo")
+        different_test = pysubunit.RemotedTestCase("ofo")
         self.assertNotEqual(test, different_test)
         self.assertNotEqual(another_test, different_test)
 
@@ -985,20 +985,20 @@ class TestRemotedTestCase(unittest.TestCase):
 class TestRemoteError(unittest.TestCase):
 
     def test_eq(self):
-        error = subunit.RemoteError(_u("Something went wrong"))
-        another_error = subunit.RemoteError(_u("Something went wrong"))
-        different_error = subunit.RemoteError(_u("boo!"))
+        error = pysubunit.RemoteError(_u("Something went wrong"))
+        another_error = pysubunit.RemoteError(_u("Something went wrong"))
+        different_error = pysubunit.RemoteError(_u("boo!"))
         self.assertEqual(error, another_error)
         self.assertNotEqual(error, different_error)
         self.assertNotEqual(different_error, another_error)
 
     def test_empty_constructor(self):
-        self.assertEqual(subunit.RemoteError(), subunit.RemoteError(_u("")))
+        self.assertEqual(pysubunit.RemoteError(), pysubunit.RemoteError(_u("")))
 
 
 class TestExecTestCase(unittest.TestCase):
 
-    class SampleExecTestCase(subunit.ExecTestCase):
+    class SampleExecTestCase(pysubunit.ExecTestCase):
 
         def test_sample_method(self):
             """sample-script.py"""
@@ -1012,7 +1012,8 @@ class TestExecTestCase(unittest.TestCase):
     def test_construct(self):
         test = self.SampleExecTestCase("test_sample_method")
         self.assertEqual(test.script,
-                         subunit.join_dir(__file__, 'sample-script.py'))
+                         pysubunit.join_dir(__file__, 'sample-script.py'))
+
 
     def test_args(self):
         result = unittest.TestResult()
@@ -1024,12 +1025,12 @@ class TestExecTestCase(unittest.TestCase):
         result = ExtendedTestResult()
         test = self.SampleExecTestCase("test_sample_method")
         test.run(result)
-        mcdonald = subunit.RemotedTestCase("old mcdonald")
-        bing = subunit.RemotedTestCase("bing crosby")
+        mcdonald = pysubunit.RemotedTestCase("old mcdonald")
+        bing = pysubunit.RemotedTestCase("bing crosby")
         bing_details = {}
         bing_details['traceback'] = Content(ContentType("text", "x-traceback",
             {'charset': 'utf8'}), lambda:[_b("foo.c:53:ERROR invalid state\n")])
-        an_error = subunit.RemotedTestCase("an error")
+        an_error = pysubunit.RemotedTestCase("an error")
         error_details = {}
         self.assertEqual([
             ('startTest', mcdonald),
@@ -1051,13 +1052,13 @@ class TestExecTestCase(unittest.TestCase):
         """TODO run the child process and count responses to determine the count."""
 
     def test_join_dir(self):
-        sibling = subunit.join_dir(__file__, 'foo')
+        sibling = pysubunit.join_dir(__file__, 'foo')
         filedir = os.path.abspath(os.path.dirname(__file__))
         expected = os.path.join(filedir, 'foo')
         self.assertEqual(sibling, expected)
 
 
-class DoExecTestCase(subunit.ExecTestCase):
+class DoExecTestCase(pysubunit.ExecTestCase):
 
     def test_working_script(self):
         """sample-two-script.py"""
@@ -1065,7 +1066,7 @@ class DoExecTestCase(subunit.ExecTestCase):
 
 class TestIsolatedTestCase(TestCase):
 
-    class SampleIsolatedTestCase(subunit.IsolatedTestCase):
+    class SampleIsolatedTestCase(pysubunit.IsolatedTestCase):
 
         SETUP = False
         TEARDOWN = False
@@ -1119,12 +1120,12 @@ class TestIsolatedTestSuite(TestCase):
 
 
     def test_construct(self):
-        subunit.IsolatedTestSuite()
+        pysubunit.IsolatedTestSuite()
 
     @skipIf(os.name != "posix", "Need a posix system for forking tests")
     def test_run(self):
         result = unittest.TestResult()
-        suite = subunit.IsolatedTestSuite()
+        suite = pysubunit.IsolatedTestSuite()
         sub_suite = unittest.TestSuite()
         sub_suite.addTest(self.SampleTestToIsolate("test_sets_global_state"))
         sub_suite.addTest(self.SampleTestToIsolate("test_sets_global_state"))
@@ -1142,14 +1143,14 @@ class TestTestProtocolClient(TestCase):
     def setUp(self):
         super(TestTestProtocolClient, self).setUp()
         self.io = BytesIO()
-        self.protocol = subunit.TestProtocolClient(self.io)
+        self.protocol = pysubunit.TestProtocolClient(self.io)
         self.unicode_test = PlaceHolder(_u('\u2603'))
         self.test = TestTestProtocolClient("test_start_test")
         self.sample_details = {'something':Content(
             ContentType('text', 'plain'), lambda:[_b('serialised\nform')])}
         self.sample_tb_details = dict(self.sample_details)
         self.sample_tb_details['traceback'] = TracebackContent(
-            subunit.RemoteError(_u("boo qux")), self.test)
+            pysubunit.RemoteError(_u("boo qux")), self.test)
 
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
@@ -1191,7 +1192,7 @@ class TestTestProtocolClient(TestCase):
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
         self.protocol.addFailure(
-            self.test, subunit.RemoteError(_u("boo qux")))
+            self.test, pysubunit.RemoteError(_u("boo qux")))
         self.assertEqual(
             self.io.getvalue(),
             _b(('failure: %s [\n' + _remote_exception_str + ': boo qux\n]\n')
@@ -1222,7 +1223,7 @@ class TestTestProtocolClient(TestCase):
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
         self.protocol.addError(
-            self.test, subunit.RemoteError(_u("phwoar crikey")))
+            self.test, pysubunit.RemoteError(_u("phwoar crikey")))
         self.assertEqual(
             self.io.getvalue(),
             _b(('error: %s [\n' +
@@ -1254,7 +1255,7 @@ class TestTestProtocolClient(TestCase):
     def test_add_expected_failure(self):
         """Test addExpectedFailure on a TestProtocolClient."""
         self.protocol.addExpectedFailure(
-            self.test, subunit.RemoteError(_u("phwoar crikey")))
+            self.test, pysubunit.RemoteError(_u("phwoar crikey")))
         self.assertEqual(
             self.io.getvalue(),
             _b(('xfail: %s [\n' +
@@ -1305,29 +1306,29 @@ class TestTestProtocolClient(TestCase):
             "]\n" % self.test.id()))
 
     def test_progress_set(self):
-        self.protocol.progress(23, subunit.PROGRESS_SET)
+        self.protocol.progress(23, pysubunit.PROGRESS_SET)
         self.assertEqual(self.io.getvalue(), _b('progress: 23\n'))
 
     def test_progress_neg_cur(self):
-        self.protocol.progress(-23, subunit.PROGRESS_CUR)
+        self.protocol.progress(-23, pysubunit.PROGRESS_CUR)
         self.assertEqual(self.io.getvalue(), _b('progress: -23\n'))
 
     def test_progress_pos_cur(self):
-        self.protocol.progress(23, subunit.PROGRESS_CUR)
+        self.protocol.progress(23, pysubunit.PROGRESS_CUR)
         self.assertEqual(self.io.getvalue(), _b('progress: +23\n'))
 
     def test_progress_pop(self):
-        self.protocol.progress(1234, subunit.PROGRESS_POP)
+        self.protocol.progress(1234, pysubunit.PROGRESS_POP)
         self.assertEqual(self.io.getvalue(), _b('progress: pop\n'))
 
     def test_progress_push(self):
-        self.protocol.progress(1234, subunit.PROGRESS_PUSH)
+        self.protocol.progress(1234, pysubunit.PROGRESS_PUSH)
         self.assertEqual(self.io.getvalue(), _b('progress: push\n'))
 
     def test_time(self):
         # Calling time() outputs a time signal immediately.
         self.protocol.time(
-            datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc()))
+            datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC))
         self.assertEqual(
             _b("time: 2009-10-11 12:13:14.000015Z\n"),
             self.io.getvalue())

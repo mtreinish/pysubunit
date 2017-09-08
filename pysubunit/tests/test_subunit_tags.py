@@ -21,8 +21,8 @@ from io import BytesIO
 import testtools
 from testtools.matchers import Contains
 
-import subunit
-import subunit.test_results
+import pysubunit
+import pysubunit.test_results
 
 
 class TestSubUnitTags(testtools.TestCase):
@@ -57,29 +57,29 @@ class TestSubUnitTags(testtools.TestCase):
             b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
                 b'\x83\x1b\x04test\x03\x03foo\x03bar\x04quux:\x05e\x80',
             ]
-        stream = subunit.StreamResultToBytes(self.original)
+        stream = pysubunit.StreamResultToBytes(self.original)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(
             test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
         self.original.seek(0)
         self.assertEqual(
-            0, subunit.tag_stream(self.original, self.filtered, ["quux"]))
+            0, pysubunit.tag_stream(self.original, self.filtered, ["quux"]))
         self.assertThat(reference, Contains(self.filtered.getvalue()))
 
     def test_remove_tag(self):
         reference = BytesIO()
-        stream = subunit.StreamResultToBytes(reference)
+        stream = pysubunit.StreamResultToBytes(reference)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(
             test_id='test', test_status='success', test_tags=set(['foo']))
-        stream = subunit.StreamResultToBytes(self.original)
+        stream = pysubunit.StreamResultToBytes(self.original)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(
             test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
         self.original.seek(0)
         self.assertEqual(
-            0, subunit.tag_stream(self.original, self.filtered, ["-bar"]))
+            0, pysubunit.tag_stream(self.original, self.filtered, ["-bar"]))
         self.assertEqual(reference.getvalue(), self.filtered.getvalue())

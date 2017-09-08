@@ -20,7 +20,7 @@ import unittest
 
 from testtools.compat import _b, BytesIO, StringIO
 
-import subunit
+import pysubunit
 
 
 class TestTestResultStats(unittest.TestCase):
@@ -28,9 +28,9 @@ class TestTestResultStats(unittest.TestCase):
 
     def setUp(self):
         self.output = StringIO()
-        self.result = subunit.TestResultStats(self.output)
+        self.result = pysubunit.TestResultStats(self.output)
         self.input_stream = BytesIO()
-        self.test = subunit.ProtocolTestCase(self.input_stream)
+        self.test = pysubunit.ProtocolTestCase(self.input_stream)
 
     def test_stats_empty(self):
         self.test.run(self.result)

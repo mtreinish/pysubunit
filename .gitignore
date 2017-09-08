@@ -54,3 +54,5 @@ perl/MYMETA.yml
 *~
 .*.swp
 .*.swo
+.stestr/
+.tox/

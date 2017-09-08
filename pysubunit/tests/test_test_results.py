@@ -19,6 +19,7 @@ import datetime
 import sys
 import unittest
 
+import iso8601
 from testtools import TestCase
 from testtools.compat import StringIO
 from testtools.content import (
@@ -27,14 +28,13 @@ from testtools.content import (
     )
 from testtools.testresult.doubles import ExtendedTestResult
 
-import subunit
-import subunit.iso8601 as iso8601
-import subunit.test_results
+import pysubunit
+import pysubunit.test_results
 
 import testtools
 
 
-class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):
+class LoggingDecorator(pysubunit.test_results.HookedTestResultDecorator):
 
     def __init__(self, decorated):
         self._calls = 0
@@ -100,13 +100,13 @@ class TestHookedTestResultDecorator(unittest.TestCase):
         self.result.stopTestRun()
 
     def test_addError(self):
-        self.result.addError(self, subunit.RemoteError())
+        self.result.addError(self, pysubunit.RemoteError())
 
     def test_addError_details(self):
         self.result.addError(self, details={})
 
     def test_addFailure(self):
-        self.result.addFailure(self, subunit.RemoteError())
+        self.result.addFailure(self, pysubunit.RemoteError())
 
     def test_addFailure_details(self):
         self.result.addFailure(self, details={})
@@ -124,7 +124,7 @@ class TestHookedTestResultDecorator(unittest.TestCase):
         self.result.addSkip(self, details={})
 
     def test_addExpectedFailure(self):
-        self.result.addExpectedFailure(self, subunit.RemoteError())
+        self.result.addExpectedFailure(self, pysubunit.RemoteError())
 
     def test_addExpectedFailure_details(self):
         self.result.addExpectedFailure(self, details={})
@@ -136,7 +136,7 @@ class TestHookedTestResultDecorator(unittest.TestCase):
         self.result.addUnexpectedSuccess(self, details={})
 
     def test_progress(self):
-        self.result.progress(1, subunit.PROGRESS_SET)
+        self.result.progress(1, pysubunit.PROGRESS_SET)
 
     def test_wasSuccessful(self):
         self.result.wasSuccessful()
@@ -157,7 +157,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         # And end to the chain which captures time events.
         terminal = TimeCapturingResult()
         # The result object under test.
-        self.result = subunit.test_results.AutoTimingTestResultDecorator(
+        self.result = pysubunit.test_results.AutoTimingTestResultDecorator(
             terminal)
         self.decorated = terminal
 
@@ -167,7 +167,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.assertNotEqual(None, self.decorated._calls[0])
 
     def test_no_time_from_progress(self):
-        self.result.progress(1, subunit.PROGRESS_CUR)
+        self.result.progress(1, pysubunit.PROGRESS_CUR)
         self.assertEqual(0, len(self.decorated._calls))
 
     def test_no_time_from_shouldStop(self):
@@ -178,7 +178,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
     def test_calling_time_inhibits_automatic_time(self):
         # Calling time() outputs a time signal immediately and prevents
         # automatically adding one when other methods are called.
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
         self.result.time(time)
         self.result.startTest(self)
         self.result.stopTest(self)
@@ -186,7 +186,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.assertEqual(time, self.decorated._calls[0])
 
     def test_calling_time_None_enables_automatic_time(self):
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
         self.result.time(time)
         self.assertEqual(1, len(self.decorated._calls))
         self.assertEqual(time, self.decorated._calls[0])
@@ -209,7 +209,7 @@ class TestTagCollapsingDecorator(TestCase):
 
     def test_tags_collapsed_outside_of_tests(self):
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.tags(set(['a']), set())
         tag_collapser.tags(set(['b']), set())
         tag_collapser.startTest(self)
@@ -220,7 +220,7 @@ class TestTagCollapsingDecorator(TestCase):
 
     def test_tags_collapsed_outside_of_tests_are_flushed(self):
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.startTestRun()
         tag_collapser.tags(set(['a']), set())
         tag_collapser.tags(set(['b']), set())
@@ -238,9 +238,9 @@ class TestTagCollapsingDecorator(TestCase):
              ], result._events)
 
     def test_tags_forwarded_after_tests(self):
-        test = subunit.RemotedTestCase('foo')
+        test = pysubunit.RemotedTestCase('foo')
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.startTestRun()
         tag_collapser.startTest(test)
         tag_collapser.addSuccess(test)
@@ -259,8 +259,8 @@ class TestTagCollapsingDecorator(TestCase):
 
     def test_tags_collapsed_inside_of_tests(self):
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
+        test = pysubunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
         tag_collapser.tags(set(['a']), set())
         tag_collapser.tags(set(['b']), set(['a']))
@@ -274,8 +274,8 @@ class TestTagCollapsingDecorator(TestCase):
 
     def test_tags_collapsed_inside_of_tests_different_ordering(self):
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
+        test = pysubunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
         tag_collapser.tags(set(), set(['a']))
         tag_collapser.tags(set(['a', 'b']), set())
@@ -293,8 +293,8 @@ class TestTagCollapsingDecorator(TestCase):
         # something different to 'tags:' after a result line, we need to be
         # sure that tags are emitted before 'addSuccess' (or whatever).
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        tag_collapser = pysubunit.test_results.TagCollapsingDecorator(result)
+        test = pysubunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
         tag_collapser.tags(set(['a']), set())
         tag_collapser.addSuccess(test)
@@ -317,7 +317,7 @@ class TestTimeCollapsingDecorator(TestCase):
     def test_initial_time_forwarded(self):
         # We always forward the first time event we see.
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
         self.assertEquals([('time', a_time)], result._events)
@@ -326,11 +326,11 @@ class TestTimeCollapsingDecorator(TestCase):
         # If there are many consecutive time events, only the first and last
         # are sent through.
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TimeCollapsingDecorator(result)
         times = [self.make_time() for i in range(5)]
         for a_time in times:
             tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        tag_collapser.startTest(pysubunit.RemotedTestCase('foo'))
         self.assertEquals(
             [('time', times[0]), ('time', times[-1])], result._events[:-1])
 
@@ -338,29 +338,29 @@ class TestTimeCollapsingDecorator(TestCase):
         # If we receive a single time event followed by a non-time event, we
         # send exactly one time event.
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        tag_collapser.startTest(pysubunit.RemotedTestCase('foo'))
         self.assertEquals([('time', a_time)], result._events[:-1])
 
     def test_duplicate_times_not_sent(self):
         # Many time events with the exact same time are collapsed into one
         # time event.
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         for i in range(5):
             tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        tag_collapser.startTest(pysubunit.RemotedTestCase('foo'))
         self.assertEquals([('time', a_time)], result._events[:-1])
 
     def test_no_times_inserted(self):
         result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        tag_collapser = pysubunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        foo = subunit.RemotedTestCase('foo')
+        foo = pysubunit.RemotedTestCase('foo')
         tag_collapser.startTest(foo)
         tag_collapser.addSuccess(foo)
         tag_collapser.stopTest(foo)
@@ -376,7 +376,7 @@ class TestByTestResultTests(testtools.TestCase):
     def setUp(self):
         super(TestByTestResultTests, self).setUp()
         self.log = []
-        self.result = subunit.test_results.TestByTestResult(self.on_test)
+        self.result = pysubunit.test_results.TestByTestResult(self.on_test)
         if sys.version_info >= (3, 0):
             self.result._now = iter(range(5)).__next__
         else:
@@ -535,7 +535,7 @@ class TestCsvResult(testtools.TestCase):
 
     def test_csv_output(self):
         stream = StringIO()
-        result = subunit.test_results.CsvResult(stream)
+        result = pysubunit.test_results.CsvResult(stream)
         if sys.version_info >= (3, 0):
             result._now = iter(range(5)).__next__
         else:
@@ -553,7 +553,7 @@ class TestCsvResult(testtools.TestCase):
 
     def test_just_header_when_no_tests(self):
         stream = StringIO()
-        result = subunit.test_results.CsvResult(stream)
+        result = pysubunit.test_results.CsvResult(stream)
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(
@@ -562,5 +562,5 @@ class TestCsvResult(testtools.TestCase):
 
     def test_no_output_before_events(self):
         stream = StringIO()
-        subunit.test_results.CsvResult(stream)
+        pysubunit.test_results.CsvResult(stream)
         self.assertEqual([], self.parse_stream(stream))

@@ -20,16 +20,16 @@ from datetime import datetime
 import os
 import subprocess
 import sys
-from subunit import iso8601
 import unittest
 
+import iso8601
 from testtools import TestCase
 from testtools.compat import _b, BytesIO
 from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
-import subunit
-from subunit.test_results import make_tag_filter, TestResultFilter
-from subunit import ByteStreamToStreamResult, StreamResultToBytes
+import pysubunit
+from pysubunit.test_results import make_tag_filter, TestResultFilter
+from pysubunit import ByteStreamToStreamResult, StreamResultToBytes
 
 
 class TestTestResultFilter(TestCase):
@@ -65,7 +65,7 @@ xfail todo
         """
         if input_stream is None:
             input_stream = self.example_subunit_stream
-        test = subunit.ProtocolTestCase(BytesIO(input_stream))
+        test = pysubunit.ProtocolTestCase(BytesIO(input_stream))
         test.run(result_filter)
 
     def test_default(self):
@@ -90,7 +90,7 @@ xfail todo
         tests_included = [
             event[1] for event in result._events if event[0] == 'startTest']
         tests_expected = list(map(
-            subunit.RemotedTestCase,
+            pysubunit.RemotedTestCase,
             ['passed', 'error', 'skipped', 'todo']))
         self.assertEquals(tests_expected, tests_included)
 
@@ -106,7 +106,7 @@ xfail todo
             "test: bar\n"
             "successful: bar\n")
         self.run_tests(result_filter, input_stream)
-        foo = subunit.RemotedTestCase('foo')
+        foo = pysubunit.RemotedTestCase('foo')
         self.assertEquals(
             [('startTest', foo),
              ('tags', set(['a']), set()),
@@ -167,7 +167,7 @@ xfail todo
         self.assertEqual(3, filtered_result.testsRun)
 
     def test_exclude_skips(self):
-        filtered_result = subunit.TestResultStats(None)
+        filtered_result = pysubunit.TestResultStats(None)
         result_filter = TestResultFilter(filtered_result, filter_skip=True)
         self.run_tests(result_filter)
         self.assertEqual(0, filtered_result.skipped_tests)
@@ -230,7 +230,7 @@ xfail todo
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
-        foo = subunit.RemotedTestCase('foo')
+        foo = pysubunit.RemotedTestCase('foo')
         self.maxDiff = None
         self.assertEqual(
             [('time', date_a),
@@ -258,7 +258,7 @@ xfail todo
         result_filter.startTestRun()
         self.run_tests(result_filter, subunit_stream)
         result_filter.stopTestRun()
-        foo = subunit.RemotedTestCase('foo')
+        foo = pysubunit.RemotedTestCase('foo')
         self.maxDiff = None
         self.assertEqual(
             [('startTestRun',),
@@ -274,7 +274,7 @@ xfail todo
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
-        foo = subunit.RemotedTestCase('foo')
+        foo = pysubunit.RemotedTestCase('foo')
         self.assertEquals(
             [('startTest', foo),
              ('addSkip', foo, {}),
@@ -288,9 +288,8 @@ xfail todo
 class TestFilterCommand(TestCase):
 
     def run_command(self, args, stream):
-        root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        script_path = os.path.join(root, 'filters', 'subunit-filter')
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        script_path = os.path.join(root, 'commands', 'subunit-filter')
         command = [sys.executable, script_path] + list(args)
         ps = subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
