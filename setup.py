@@ -1,83 +1,29 @@
-#!/usr/bin/env python
-import os.path
+# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
+import setuptools
+
+# In python < 2.7.4, a lazy loading of package `pbr` will break
+# setuptools if some other modules registered functions in `atexit`.
+# solution from: http://bugs.python.org/issue15881#msg170215
 try:
-    # If the user has setuptools / distribute installed, use it
-    from setuptools import setup
+    import multiprocessing  # noqa
 except ImportError:
-    # Otherwise, fall back to distutils.
-    from distutils.core import setup
-    extra = {}
-else:
-    extra = {
-        'install_requires': [
-            'extras',
-            'testtools>=0.9.34',
-        ],
-        'tests_require': [
-            'fixtures',
-            'hypothesis',
-            'testscenarios',
-        ],
-        'extras_require': {
-            'docs': ['docutils'],
-            'test': ['fixtures', 'testscenarios'],
-            'test:python_version!="3.2"': ['hypothesis'],
-        },
-    }
+    pass
 
-
-def _get_version_from_file(filename, start_of_line, split_marker):
-    """Extract version from file, giving last matching value or None"""
-    try:
-        return [x for x in open(filename)
-            if x.startswith(start_of_line)][-1].split(split_marker)[1].strip()
-    except (IOError, IndexError):
-        return None
-
-
-VERSION = (
-    # Assume we are in a distribution, which has PKG-INFO
-    _get_version_from_file('PKG-INFO', 'Version:', ':')
-    # Must be a development checkout, so use the Makefile
-    or _get_version_from_file('Makefile', 'VERSION', '=')
-    or "0.0")
-
-
-relpath = os.path.dirname(__file__)
-if relpath:
-    os.chdir(relpath)
-setup(
-    name='python-subunit',
-    version=VERSION,
-    description=('Python implementation of subunit test streaming protocol'),
-    long_description=open('README.rst').read(),
-    classifiers=[
-        'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python',
-        'Topic :: Software Development :: Testing',
-    ],
-    keywords='python test streaming',
-    author='Robert Collins',
-    author_email='subunit-dev@lists.launchpad.net',
-    url='http://launchpad.net/subunit',
-    packages=['subunit', 'subunit.tests'],
-    package_dir={'subunit': 'python/subunit'},
-    scripts = [
-        'filters/subunit-1to2',
-        'filters/subunit-2to1',
-        'filters/subunit-filter',
-        'filters/subunit-ls',
-        'filters/subunit-notify',
-        'filters/subunit-output',
-        'filters/subunit-stats',
-        'filters/subunit-tags',
-        'filters/subunit2csv',
-        'filters/subunit2disk',
-        'filters/subunit2gtk',
-        'filters/subunit2junitxml',
-        'filters/subunit2pyunit',
-        'filters/tap2subunit',
-    ],
-    **extra
-)
+setuptools.setup(
+    setup_requires=['pbr>=2.0.0'],
+    pbr=True)

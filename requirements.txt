@@ -1,0 +1,7 @@
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process.
+pbr!=2.1.0,>=2.0.0 # Apache-2.0
+extras
+testtools>=0.9.34
+iso8601>=0.1.12

@@ -1,0 +1,3 @@
+fixturesi>=3.0.0
+hypothesis>=3.24.1
+testscenarios>=0.4
