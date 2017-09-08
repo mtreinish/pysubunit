@@ -289,7 +289,7 @@ class TestFilterCommand(TestCase):
 
     def run_command(self, args, stream):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        script_path = os.path.join(root, 'commands', 'subunit-filter')
+        script_path = os.path.join(root, 'commands', 'subunit_filter.py')
         command = [sys.executable, script_path] + list(args)
         ps = subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
