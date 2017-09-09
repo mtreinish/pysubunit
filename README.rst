@@ -1,25 +1,7 @@
+pysubunit
+=========
 
-  subunit: A streaming protocol for test results
-  Copyright (C) 2005-2013 Robert Collins <robertc@robertcollins.net>
-
-  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-  license at the users choice. A copy of both licenses are available in the
-  project source as Apache-2.0 and BSD. You may not use this file except in
-  compliance with one of these two licences.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-  license you chose for the specific language governing permissions and
-  limitations under that license.
-
-  See the COPYING file for full details on the licensing of Subunit.
-
-  subunit reuses iso8601 by Michael Twomey, distributed under an MIT style
-  licence - see python/iso8601/LICENSE for details.
-
-Subunit
--------
+pysubunit is an alternative python implementation of the subunit protocol. The
 
 Subunit is a streaming protocol for test results.
 
@@ -42,10 +24,6 @@ concurrently, or where the stream generator suffers a bug).
 More details on both protocol version s can be found in the 'Protocol' section
 of this document.
 
-Subunit comes with command line filters to process a subunit stream and
-language bindings for python, C, C++ and shell. Bindings are easy to write
-for other languages.
-
 A number of useful things can be done easily with subunit:
  * Test aggregation: Tests run separately can be combined and then
    reported/displayed together. For instance, tests from different languages
@@ -64,7 +42,6 @@ Subunit supplies the following filters:
  * subunit2csv - convert a subunit stream to csv.
  * subunit2disk - export a subunit stream to files on disk.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
- * subunit2gtk - show a subunit stream in GTK.
  * subunit2junitxml - convert a subunit stream to JUnit's XML format.
  * subunit-diff - compare two subunit streams.
  * subunit-filter - filter out tests from a subunit stream.
@@ -72,52 +49,13 @@ Subunit supplies the following filters:
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
-Integration with other tools
-----------------------------
-
-Subunit's language bindings act as integration with various test runners like
-'check', 'cppunit', Python's 'unittest'. Beyond that a small amount of glue
-(typically a few lines) will allow Subunit to be used in more sophisticated
-ways.
-
 Python
-======
-
-Subunit has excellent Python support: most of the filters and tools are written
-in python and there are facilities for using Subunit to increase test isolation
-seamlessly within a test suite.
+------
 
 The most common way is to run an existing python test suite and have it output
-subunit via the ``subunit.run`` module::
+subunit via the ``pysubunit.run`` module::
 
-  $ python -m subunit.run mypackage.tests.test_suite
-
-For more information on the Python support Subunit offers , please see
-``pydoc subunit``, or the source in ``python/subunit/``
-
-C
-=
-
-Subunit has C bindings to emit the protocol. The 'check' C unit testing project
-has included subunit support in their project for some years now. See
-'c/README' for more details.
-
-C++
-===
-
-The C library is includable and usable directly from C++. A TestListener for
-CPPUnit is included in the Subunit distribution. See 'c++/README' for details.
-
-shell
-=====
-
-There are two sets of shell tools. There are filters, which accept a subunit
-stream on stdin and output processed data (or a transformed stream) on stdout.
-
-Then there are unittest facilities similar to those for C : shell bindings
-consisting of simple functions to output protocol elements, and a patch for
-adding subunit output to the 'ShUnit' shell test runner. See 'shell/README' for
-details.
+  $ python -m pysubunit.run mypackage.tests.test_suite
 
 Filter recipes
 --------------
@@ -140,7 +78,7 @@ ways the test framework doesn't apply any semantic value to), file attachments
 (allow arbitrary data to make analysing a failure easy) and timestamps.
 
 The protocol
-------------
+============
 
 Version 2, or v2 is new and still under development, but is intended to
 supercede version 1 in the very near future. Subunit's bundled tools accept
@@ -148,7 +86,7 @@ only version 2 and only emit version 2, but the new filters subunit-1to2 and
 subunit-2to1 can be used to interoperate with older third party libraries.
 
 Version 2
-=========
+---------
 
 Version 2 is a binary protocol consisting of independent packets that can be
 embedded in the output from tools like make - as long as each packet has no
@@ -350,12 +288,12 @@ b3 2901 0c 03666f6f 08555f1b
 
 
 Version 1 (and 1.1)
-===================
+-------------------
 
 Version 1 (and 1.1) are mostly human readable protocols.
 
 Sample subunit wire contents
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following::
 
@@ -383,7 +321,7 @@ When run through subunit2pyunit::
 
 
 Subunit v1 protocol description
-===============================
+-------------------------------
 
 This description is being ported to an EBNF style. Currently its only partly in
 that style, but should be fairly clear all the same. When in doubt, refer the
@@ -465,17 +403,3 @@ to indicate a test that errored in some expected fashion (also know as "TODO"
 tests in some frameworks). uxsuccess is used to indicate and unexpected success
 where a test though to be failing actually passes. It is complementary to
 xfail.
-
-Hacking on subunit
-------------------
-
-Releases
-========
-
-* Update versions in configure.ac and python/subunit/__init__.py.
-* Update NEWS.
-* Do a make distcheck, which will update Makefile etc.
-* Do a PyPI release: PYTHONPATH=../../python python ../../setup.py sdist bdist_wheel upload -s
-* Upload the regular one to LP.
-* Push a tagged commit.
-
