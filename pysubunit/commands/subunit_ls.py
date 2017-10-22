@@ -1,37 +1,32 @@
 #!/usr/bin/env python
-#  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """List tests in a subunit stream."""
 
-from optparse import OptionParser
+import optparse
 import sys
 
-from testtools import (
-    CopyStreamResult, StreamToExtendedDecorator, StreamResultRouter,
-    StreamSummary)
+import testtools
 
-from pysubunit import ByteStreamToStreamResult
-from pysubunit.filters import find_stream
-from pysubunit.test_results import (
-    CatFiles,
-    TestIdPrintingResult,
-    )
+import pysubunit
+from pysubunit import filters
+from pysubunit import test_results
 
 
 def main():
-    parser = OptionParser(description=__doc__)
+    parser = optparse.OptionParser(description=__doc__)
     parser.add_option(
         "--times", action="store_true",
         help="list the time each test took (requires a timestamped stream)",
@@ -45,15 +40,17 @@ def main():
         help="Hide all non subunit input.", default=False,
         dest="no_passthrough")
     (options, args) = parser.parse_args()
-    test = ByteStreamToStreamResult(
-        find_stream(sys.stdin, args), non_subunit_name="stdout")
-    result = TestIdPrintingResult(sys.stdout, options.times, options.exists)
+    test = pysubunit.ByteStreamToStreamResult(
+        filters.find_stream(sys.stdin, args), non_subunit_name="stdout")
+    result = test_results.TestIdPrintingResult(sys.stdout,
+                                               options.times,
+                                               options.exists)
     if not options.no_passthrough:
-        result = StreamResultRouter(result)
-        cat = CatFiles(sys.stdout)
+        result = testtools.StreamResultRouter(result)
+        cat = test_results.CatFiles(sys.stdout)
         result.add_rule(cat, 'test_id', test_id=None)
-    summary = StreamSummary()
-    result = CopyStreamResult([result, summary])
+    summary = testtools.StreamSummary()
+    result = testtools.CopyStreamResult([result, summary])
     result.startTestRun()
     test.run(result)
     result.stopTestRun()

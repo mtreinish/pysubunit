@@ -1,25 +1,20 @@
-#  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 2013 Subunit Contributors
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import datetime
 from functools import partial
-from optparse import (
-    OptionGroup,
-    OptionParser,
-    OptionValueError,
-)
+import optparse
 import sys
 
 import iso8601
@@ -37,7 +32,7 @@ _FINAL_ACTIONS = frozenset([
     'xfail',
 ])
 _ALL_ACTIONS = _FINAL_ACTIONS.union(['inprogress'])
-_CHUNK_SIZE=3670016 # 3.5 MiB
+_CHUNK_SIZE = 3670016  # 3.5 MiB
 
 
 def output_main():
@@ -47,7 +42,7 @@ def output_main():
     return 0
 
 
-def parse_arguments(args=None, ParserClass=OptionParser):
+def parse_arguments(args=None, ParserClass=optparse.OptionParser):
     """Parse arguments from the command line.
 
     If specified, args must be a list of strings, similar to sys.argv[1:].
@@ -63,11 +58,11 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     parser.set_default('tags', None)
     parser.set_default('test_id', None)
 
-    status_commands = OptionGroup(
+    status_commands = optparse.OptionGroup(
         parser,
         "Status Commands",
         "These options report the status of a test. TEST_ID must be a string "
-            "that uniquely identifies the test."
+        "that uniquely identifies the test."
     )
     for action_name in _ALL_ACTIONS:
         status_commands.add_option(
@@ -82,35 +77,36 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         )
     parser.add_option_group(status_commands)
 
-    file_commands = OptionGroup(
+    file_commands = optparse.OptionGroup(
         parser,
         "File Options",
         "These options control attaching data to a result stream. They can "
-            "either be specified with a status command, in which case the file "
-            "is attached to the test status, or by themselves, in which case "
-            "the file is attached to the stream (and not associated with any "
-            "test id)."
+        "either be specified with a status command, in which case the file "
+        "is attached to the test status, or by themselves, in which case "
+        "the file is attached to the stream (and not associated with any "
+        "test id)."
     )
     file_commands.add_option(
         "--attach-file",
         help="Attach a file to the result stream for this test. If '-' is "
-            "specified, stdin will be read instead. In this case, the file "
-            "name will be set to 'stdin' (but can still be overridden with "
-            "the --file-name option)."
+             "specified, stdin will be read instead. In this case, the file "
+             "name will be set to 'stdin' (but can still be overridden with "
+             "the --file-name option)."
     )
     file_commands.add_option(
         "--file-name",
         help="The name to give this file attachment. If not specified, the "
-            "name of the file on disk will be used, or 'stdin' in the case "
-            "where '-' was passed to the '--attach-file' argument. This option"
-            " may only be specified when '--attach-file' is specified.",
+             "name of the file on disk will be used, or 'stdin' in the case "
+             "where '-' was passed to the '--attach-file' argument. This "
+             "option may only be specified when '--attach-file' is specified.",
         )
     file_commands.add_option(
         "--mimetype",
         help="The mime type to send with this file. This is only used if the "
-            "--attach-file argument is used. This argument is optional. If it "
-            "is not specified, the file will be sent without a mime type. This "
-            "option may only be specified when '--attach-file' is specified.",
+             "--attach-file argument is used. This argument is optional. If "
+             "it is not specified, the file will be sent without a mime type. "
+             "This option may only be specified when '--attach-file' is "
+             "specified.",
         default=None
     )
     parser.add_option_group(file_commands)
@@ -137,17 +133,20 @@ def parse_arguments(args=None, ParserClass=OptionParser):
             try:
                 options.attach_file = open(options.attach_file, 'rb')
             except IOError as e:
-                parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
+                parser.error("Cannot open %s (%s)" % (options.attach_file,
+                                                      e.strerror))
 
     return options
 
 
 def set_status_cb(option, opt_str, value, parser, status_name):
     if getattr(parser.values, "action", None) is not None:
-        raise OptionValueError("argument %s: Only one status may be specified at once." % opt_str)
+        raise optparse.OptionValueError(
+            "argument %s: Only one status may be specified at once." % opt_str)
 
     if len(parser.rargs) == 0:
-        raise OptionValueError("argument %s: must specify a single TEST_ID." % opt_str)
+        raise optparse.OptionValueError(
+            "argument %s: must specify a single TEST_ID." % opt_str)
     parser.values.action = status_name
     parser.values.test_id = parser.rargs.pop(0)
 
@@ -168,7 +167,8 @@ def generate_stream_results(args, output_writer):
         if is_first_packet:
             if args.attach_file:
                 if args.mimetype:
-                    write_status = partial(write_status, mime_type=args.mimetype)
+                    write_status = partial(write_status,
+                                           mime_type=args.mimetype)
             if args.tags:
                 write_status = partial(write_status, test_tags=set(args.tags))
             write_status = partial(write_status, timestamp=create_timestamp())
@@ -178,7 +178,8 @@ def generate_stream_results(args, output_writer):
 
         if args.attach_file:
             filename = args.file_name or args.attach_file.name
-            write_status = partial(write_status, file_name=filename, file_bytes=this_file_hunk)
+            write_status = partial(write_status, file_name=filename,
+                                   file_bytes=this_file_hunk)
             if next_file_hunk == b'':
                 write_status = partial(write_status, eof=True)
                 is_last_packet = True

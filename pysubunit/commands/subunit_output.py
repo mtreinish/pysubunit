@@ -1,26 +1,28 @@
 #!/usr/bin/env python
-#  Copyright (C) 2013 Subunit Contributors
+# Copyright (C) 2013 Subunit Contributors
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 
 """A command-line tool to generate a subunit result byte-stream."""
 
 import sys
 
-from pysubunit._output import output_main
+from pysubunit import _output
+
 
 def main():
-    sys.exit(output_main())
+    sys.exit(_output.output_main())
 
 if __name__ == '__main__':
     main()

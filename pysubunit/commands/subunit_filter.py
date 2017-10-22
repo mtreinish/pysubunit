@@ -1,19 +1,17 @@
 #!/usr/bin/env python
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 200-2013  Robert Collins <robertc@robertcollins.net>
-#            (C) 2009  Martin Pool
+# Copyright (C) 200-2013  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2009  Martin Pool
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """Filter a subunit stream to include/exclude tests.
 
@@ -26,71 +24,66 @@ contains tests which match any of the --with expressions and none of the
 Remember to quote shell metacharacters.
 """
 
-from optparse import OptionParser
-import sys
+import optparse
 import re
+import sys
 
-from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
+import testtools
 
-from subunit import (
-    DiscardStream,
-    ProtocolTestCase,
-    StreamResultToBytes,
-    read_test_list,
-    )
-from subunit.filters import filter_by_result, find_stream
-from subunit.test_results import (
-    and_predicates,
-    make_tag_filter,
-    TestResultFilter,
-    )
+import pysubunit
+from pysubunit import filters
+from pysubunit import test_results
 
 
 def make_options(description):
-    parser = OptionParser(description=__doc__)
+    parser = optparse.OptionParser(description=__doc__)
     parser.add_option("--error", action="store_false",
-        help="include errors", default=False, dest="error")
+                      help="include errors", default=False, dest="error")
     parser.add_option("-e", "--no-error", action="store_true",
-        help="exclude errors", dest="error")
+                      help="exclude errors", dest="error")
     parser.add_option("--failure", action="store_false",
-        help="include failures", default=False, dest="failure")
+                      help="include failures", default=False, dest="failure")
     parser.add_option("-f", "--no-failure", action="store_true",
-        help="exclude failures", dest="failure")
+                      help="exclude failures", dest="failure")
     parser.add_option("--passthrough", action="store_false",
-        help="Forward non-subunit input as 'stdout'.", default=False,
-        dest="no_passthrough")
+                      help="Forward non-subunit input as 'stdout'.",
+                      default=False, dest="no_passthrough")
     parser.add_option("--no-passthrough", action="store_true",
-        help="Discard all non subunit input.", default=False,
-        dest="no_passthrough")
+                      help="Discard all non subunit input.", default=False,
+                      dest="no_passthrough")
     parser.add_option("-s", "--success", action="store_false",
-        help="include successes", dest="success")
+                      help="include successes", dest="success")
     parser.add_option("--no-success", action="store_true",
-        help="exclude successes", default=True, dest="success")
+                      help="exclude successes", default=True, dest="success")
     parser.add_option("--no-skip", action="store_true",
-        help="exclude skips", dest="skip")
+                      help="exclude skips", dest="skip")
     parser.add_option("--xfail", action="store_false",
-        help="include expected failures", default=True, dest="xfail")
+                      help="include expected failures", default=True,
+                      dest="xfail")
     parser.add_option("--no-xfail", action="store_true",
-        help="exclude expected failures", default=True, dest="xfail")
-    parser.add_option(
-        "--with-tag", type=str,
-        help="include tests with these tags", action="append", dest="with_tags")
-    parser.add_option(
-        "--without-tag", type=str,
-        help="exclude tests with these tags", action="append", dest="without_tags")
+                      help="exclude expected failures", default=True,
+                      dest="xfail")
+    parser.add_option("--with-tag", type=str,
+                      help="include tests with these tags", action="append",
+                      dest="with_tags")
+    parser.add_option("--without-tag", type=str,
+                      help="exclude tests with these tags", action="append",
+                      dest="without_tags")
     parser.add_option("-m", "--with", type=str,
-        help="regexp to include (case-sensitive by default)",
-        action="append", dest="with_regexps")
+                      help="regexp to include (case-sensitive by default)",
+                      action="append", dest="with_regexps")
     parser.add_option("--fixup-expected-failures", type=str,
-        help="File with list of test ids that are expected to fail; on failure "
-             "their result will be changed to xfail; on success they will be "
-             "changed to error.", dest="fixup_expected_failures", action="append")
+                      help="File with list of test ids that are expected to "
+                           "fail; on failure their result will be changed "
+                           "to xfail; on success they will be changed to "
+                           "error.",
+                      dest="fixup_expected_failures", action="append")
     parser.add_option("--without", type=str,
-        help="regexp to exclude (case-sensitive by default)",
-        action="append", dest="without_regexps")
+                      help="regexp to exclude (case-sensitive by default)",
+                      action="append", dest="without_regexps")
     parser.add_option("-F", "--only-genuine-failures", action="callback",
-        callback=only_genuine_failures_callback,
-        help="Only pass through failures and exceptions.")
+                      callback=only_genuine_failures_callback,
+                      help="Only pass through failures and exceptions.")
     return parser
 
 
@@ -129,10 +122,10 @@ def _make_result(output, options, predicate):
     """Make the result that we'll send the test outcomes to."""
     fixup_expected_failures = set()
     for path in options.fixup_expected_failures or ():
-        fixup_expected_failures.update(read_test_list(path))
-    return StreamToExtendedDecorator(TestResultFilter(
-        ExtendedToStreamDecorator(
-        StreamResultToBytes(output)),
+        fixup_expected_failures.update(pysubunit.read_test_list(path))
+    return testtools.StreamToExtendedDecorator(test_results.TestResultFilter(
+        testtools.ExtendedToStreamDecorator(
+            pysubunit.StreamResultToBytes(output)),
         filter_error=options.error,
         filter_failure=options.failure,
         filter_success=options.success,
@@ -148,16 +141,18 @@ def main():
 
     regexp_filter = _make_regexp_filter(
         options.with_regexps, options.without_regexps)
-    tag_filter = make_tag_filter(options.with_tags, options.without_tags)
-    filter_predicate = and_predicates([regexp_filter, tag_filter])
+    tag_filter = test_results.make_tag_filter(
+        options.with_tags, options.without_tags)
+    filter_predicate = test_results.and_predicates(
+        [regexp_filter, tag_filter])
 
-    filter_by_result(
+    filters.filter_by_result(
         lambda output_to: _make_result(sys.stdout, options, filter_predicate),
         output_path=None,
         passthrough=(not options.no_passthrough),
         forward=False,
         protocol_version=2,
-        input_stream=find_stream(sys.stdin, args))
+        input_stream=filters.find_stream(sys.stdin, args))
     sys.exit(0)
 
 

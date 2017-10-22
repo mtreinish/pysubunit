@@ -1,29 +1,30 @@
+# Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 #
-#  subunit: extensions to Python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 
 """Handlers for outcome details."""
 
-from testtools import content, content_type
-from testtools.compat import _b, BytesIO
+import io
+
+import six
+import testtools
 
 from pysubunit import chunked
 
-end_marker = _b("]\n")
-quoted_marker = _b(" ]")
-empty = _b('')
+end_marker = six.binary_type("]\n")
+quoted_marker = six.binary_type(" ]")
+empty = six.binary_type('')
 
 
 class DetailsParser(object):
@@ -34,7 +35,7 @@ class SimpleDetailsParser(DetailsParser):
     """Parser for single-part [] delimited details."""
 
     def __init__(self, state):
-        self._message = _b("")
+        self._message = six.binary_type("")
         self._state = state
 
     def lineReceived(self, line):
@@ -53,18 +54,18 @@ class SimpleDetailsParser(DetailsParser):
             # We know that subunit/testtools serialise [] formatted
             # tracebacks as utf8, but perhaps we need a ReplacingContent
             # or something like that.
-            result['traceback'] = content.Content(
-                content_type.ContentType("text", "x-traceback",
-                {"charset": "utf8"}),
-                lambda:[self._message])
+            result['traceback'] = testtools.content.Content(
+                testtools.content_type.ContentType("text", "x-traceback",
+                                                   {"charset": "utf8"}),
+                lambda: [self._message])
         else:
             if style == 'skip':
                 name = 'reason'
             else:
                 name = 'message'
-            result[name] = content.Content(
-                content_type.ContentType("text", "plain"),
-                lambda:[self._message])
+            result[name] = testtools.content.Content(
+                testtools.content_type.ContentType("text", "plain"),
+                lambda: [self._message])
         return result
 
     def get_message(self):
@@ -83,18 +84,17 @@ class MultipartDetailsParser(DetailsParser):
         if line == end_marker:
             self._state.endDetails()
             return
-        # TODO error handling
         field, value = line[:-1].decode('utf8').split(' ', 1)
         try:
             main, sub = value.split('/')
         except ValueError:
             raise ValueError("Invalid MIME type %r" % value)
-        self._content_type = content_type.ContentType(main, sub)
+        self._content_type = testtools.content_type.ContentType(main, sub)
         self._parse_state = self._get_name
 
     def _get_name(self, line):
         self._name = line[:-1].decode('utf8')
-        self._body = BytesIO()
+        self._body = io.BytesIO()
         self._chunk_parser = chunked.Decoder(self._body)
         self._parse_state = self._feed_chunks
 
@@ -104,8 +104,8 @@ class MultipartDetailsParser(DetailsParser):
             # Line based use always ends on no residue.
             assert residue == empty, 'residue: %r' % (residue,)
             body = self._body
-            self._details[self._name] = content.Content(
-                self._content_type, lambda:[body.getvalue()])
+            self._details[self._name] = testtools.content.Content(
+                self._content_type, lambda: [body.getvalue()])
             self._chunk_parser.close()
             self._parse_state = self._look_for_content
 

@@ -1,30 +1,26 @@
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 
 from optparse import OptionParser
 import sys
 
 from extras import safe_hasattr
-from testtools import CopyStreamResult, StreamResult, StreamResultRouter
+import testtools
 
-from pysubunit import (
-    DiscardStream, ProtocolTestCase, ByteStreamToStreamResult,
-    StreamResultToBytes,
-    )
-from pysubunit.test_results import CatFiles
+import pysubunit
+from pysubunit import test_results
 
 
 def make_options(description):
@@ -39,12 +35,13 @@ def make_options(description):
     parser.add_option(
         "-f", "--forward", action="store_true", default=False,
         help="Forward subunit stream on stdout. When set, received "
-            "non-subunit output will be encapsulated in subunit.")
+             "non-subunit output will be encapsulated in subunit.")
     return parser
 
 
 def run_tests_from_stream(input_stream, result, passthrough_stream=None,
-    forward_stream=None, protocol_version=1, passthrough_subunit=True):
+                          forward_stream=None, protocol_version=1,
+                          passthrough_subunit=True):
     """Run tests from a subunit input stream through 'result'.
 
     Non-test events - top level file attachments - are expected to be
@@ -69,35 +66,37 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
         (when forwarding as subunit non-subunit input is always turned into
         subunit)
     """
-    if 1==protocol_version:
-        test = ProtocolTestCase(
+    if 1 == protocol_version:
+        test = pysubunit.ProtocolTestCase(
             input_stream, passthrough=passthrough_stream,
             forward=forward_stream)
-    elif 2==protocol_version:
+    elif 2 == protocol_version:
         # In all cases we encapsulate unknown inputs.
         if forward_stream is not None:
             # Send events to forward_stream as subunit.
-            forward_result = StreamResultToBytes(forward_stream)
+            forward_result = pysubunit.StreamResultToBytes(forward_stream)
             # If we're passing non-subunit through, copy:
             if passthrough_stream is None:
                 # Not passing non-test events - split them off to nothing.
-                router = StreamResultRouter(forward_result)
-                router.add_rule(StreamResult(), 'test_id', test_id=None)
-                result = CopyStreamResult([router, result])
+                router = testtools.StreamResultRouter(forward_result)
+                router.add_rule(testtools.StreamResult(), 'test_id',
+                                test_id=None)
+                result = testtools.CopyStreamResult([router, result])
             else:
                 # otherwise, copy all events to forward_result
-                result = CopyStreamResult([forward_result, result])
+                result = testtools.CopyStreamResult([forward_result, result])
         elif passthrough_stream is not None:
+            # Route non-test events to passthrough_stream, unwrapping them for
+            # display.
             if not passthrough_subunit:
-                # Route non-test events to passthrough_stream, unwrapping them for
-                # display.
-                passthrough_result = CatFiles(passthrough_stream)
+                passthrough_result = test_results.CatFiles(passthrough_stream)
             else:
-                passthrough_result = StreamResultToBytes(passthrough_stream)
-            result = StreamResultRouter(result)
+                passthrough_result = pysubunit.StreamResultToBytes(
+                    passthrough_stream)
+            result = testtools.StreamResultRouter(result)
             result.add_rule(passthrough_result, 'test_id', test_id=None)
-        test = ByteStreamToStreamResult(input_stream,
-            non_subunit_name='stdout')
+        test = pysubunit.ByteStreamToStreamResult(input_stream,
+                                                  non_subunit_name='stdout')
     else:
         raise Exception("Unknown protocol version.")
     result.startTestRun()
@@ -128,15 +127,15 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     if passthrough:
         passthrough_stream = sys.stdout
     else:
-        if 1==protocol_version:
-            passthrough_stream = DiscardStream()
+        if 1 == protocol_version:
+            passthrough_stream = pysubunit.DiscardStream()
         else:
             passthrough_stream = None
 
     if forward:
         forward_stream = sys.stdout
-    elif 1==protocol_version:
-        forward_stream = DiscardStream()
+    elif 1 == protocol_version:
+        forward_stream = pysubunit.DiscardStream()
     else:
         forward_stream = None
 
@@ -158,7 +157,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
 
 
 def run_filter_script(result_factory, description, post_run_hook=None,
-    protocol_version=1, passthrough_subunit=True):
+                      protocol_version=1, passthrough_subunit=True):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a

@@ -1,24 +1,24 @@
+# Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
 #
-#  subunit: extensions to Python unittest to get test results from subprocesses.
-#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 
 """Support for dealing with progress state."""
 
+
 class ProgressModel(object):
     """A model of progress indicators as subunit defines it.
-    
+
     Instances of this class represent a single logical operation that is
     progressing. The operation may have many steps, and some of those steps may
     supply their own progress information. ProgressModel uses a nested concept
@@ -40,7 +40,7 @@ class ProgressModel(object):
 
     def __init__(self):
         """Create a ProgressModel.
-        
+
         The new model has no progress data at all - it will claim a summary
         width of zero and position of 0.
         """
@@ -103,4 +103,3 @@ class ProgressModel(object):
             return task[3] * (task[1] or 1)
         else:
             return task[1]
-

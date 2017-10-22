@@ -1,47 +1,44 @@
 #!/usr/bin/env python
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2013  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2013  Robert Collins <robertc@robertcollins.net>
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """Convert a version 2 subunit stream to a version 1 stream."""
 
-from optparse import OptionParser
+import optparse
 import sys
 
-from testtools import (
-    StreamToExtendedDecorator,
-    StreamResultRouter,
-    )
+import testtools
 
-from pysubunit import ByteStreamToStreamResult, TestProtocolClient
-from pysubunit.filters import find_stream, run_tests_from_stream
-from pysubunit.test_results import CatFiles
+import pysubunit
+from pysubunit import filters
+from pysubunit import test_results
 
 
 def make_options(description):
-    parser = OptionParser(description=__doc__)
+    parser = optparse.OptionParser(description=__doc__)
     return parser
 
 
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    case = ByteStreamToStreamResult(
-        find_stream(sys.stdin, args), non_subunit_name='stdout')
-    result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
-    result = StreamResultRouter(result)
-    cat = CatFiles(sys.stdout)
+    case = pysubunit.ByteStreamToStreamResult(
+        filters.find_stream(sys.stdin, args), non_subunit_name='stdout')
+    result = testtools.StreamToExtendedDecorator(
+        pysubunit.decoratedTestProtocolClient(sys.stdout))
+    result = testtools.StreamResultRouter(result)
+    cat = test_results.CatFiles(sys.stdout)
     result.add_rule(cat, 'test_id', test_id=None)
     result.startTestRun()
     case.run(result)

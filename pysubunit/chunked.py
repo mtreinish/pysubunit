@@ -1,25 +1,25 @@
+# Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2011  Martin Pool <mbp@sourcefrog.net>
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
-#  Copyright (C) 2011  Martin Pool <mbp@sourcefrog.net>
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 
 """Encoder/decoder for http style chunked encoding."""
 
 from testtools.compat import _b
 
 empty = _b('')
+
 
 class Decoder(object):
     """Decode chunked content to a byte stream."""
@@ -92,7 +92,7 @@ class Decoder(object):
         count_chars = []
         for bytes in self.buffered_bytes:
             for pos in range(len(bytes)):
-                byte = bytes[pos:pos+1]
+                byte = bytes[pos:pos + 1]
                 if byte not in self._match_chars:
                     break
                 count_chars.append(byte)

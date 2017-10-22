@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
+# Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """Filter a subunit stream to get aggregate statistics."""
 
 
 import sys
 
-from testtools import StreamToExtendedDecorator
+import testtools
 
-from pysubunit.filters import run_filter_script
+from pysubunit import filters
+
 
 try:
     from junitxml import JUnitXmlResult
@@ -32,8 +33,8 @@ except ImportError:
 
 
 def main():
-    run_filter_script(
-        lambda output: StreamToExtendedDecorator(
+    filters.run_filter_script(
+        lambda output: testtools.StreamToExtendedDecorator(
             JUnitXmlResult(output)),
         __doc__,
         protocol_version=2)

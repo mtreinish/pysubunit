@@ -1,30 +1,24 @@
+# Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
 #
-#  subunit: extensions to Python unittest to get test results from subprocesses.
-#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
-"""TestResult helper classes used to by subunit."""
+
+"""TestResult helper classes used to by pysubunit."""
 
 import csv
 import datetime
 
 import testtools
-from testtools.content import (
-    text_content,
-    TracebackContent,
-    )
-from testtools import StreamResult
 
 import iso8601
 import pysubunit
@@ -431,8 +425,8 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
         return self.decorated.time(a_time)
 
     def id_to_orig_id(self, id):
-        if id.startswith("subunit.RemotedTestCase."):
-            return id[len("subunit.RemotedTestCase."):]
+        if id.startswith("pysubunit.RemotedTestCase."):
+            return id[len("pysubunit.RemotedTestCase."):]
         return id
 
 
@@ -449,8 +443,8 @@ class TestResultFilter(TestResultDecorator):
     """
 
     def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False, filter_xfail=False,
-        filter_predicate=None, fixup_expected_failures=None):
+                 filter_success=True, filter_skip=False, filter_xfail=False,
+                 filter_predicate=None, fixup_expected_failures=None):
         """Create a FilterResult object filtering to result.
 
         :param filter_error: Filter out errors.
@@ -579,13 +573,13 @@ class TestIdPrintingResult(testtools.TestResult):
         self._start_time = self._time()
 
     def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+               runnable=True, file_name=None, file_bytes=None, eof=False,
+               mime_type=None, route_code=None, timestamp=None):
         if not test_id:
             return
         if timestamp is not None:
             self.time(timestamp)
-        if test_status=='exists':
+        if test_status == 'exists':
             if self.show_exists:
                 self.reportTest(test_id, 0)
         elif test_status in ('inprogress', None):
@@ -662,7 +656,7 @@ class TestByTestResult(testtools.TestResult):
     def _err_to_details(self, test, err, details):
         if details:
             return details
-        return {'traceback': TracebackContent(err, test)}
+        return {'traceback': testtools.compat.TracebackContent(err, test)}
 
     def addSuccess(self, test, details=None):
         super(TestByTestResult, self).addSuccess(test)
@@ -683,10 +677,10 @@ class TestByTestResult(testtools.TestResult):
         super(TestByTestResult, self).addSkip(test, reason, details)
         self._status = 'skip'
         if details is None:
-            details = {'reason': text_content(reason)}
+            details = {'reason': testtools.compat.text_content(reason)}
         elif reason:
             # XXX: What if details already has 'reason' key?
-            details['reason'] = text_content(reason)
+            details['reason'] = testtools.compat.text_content(reason)
         self._details = details
 
     def addExpectedFailure(self, test, err=None, details=None):
@@ -714,15 +708,15 @@ class CsvResult(TestByTestResult):
         self._write_row(['test', 'status', 'start_time', 'stop_time'])
 
 
-class CatFiles(StreamResult):
+class CatFiles(testtools.StreamResult):
     """Cat file attachments received to a stream."""
 
     def __init__(self, byte_stream):
-        self.stream = subunit.make_stream_binary(byte_stream)
+        self.stream = pysubunit.make_stream_binary(byte_stream)
 
     def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+               runnable=True, file_name=None, file_bytes=None, eof=False,
+               mime_type=None, route_code=None, timestamp=None):
         if file_name is not None:
             self.stream.write(file_bytes)
             self.stream.flush()
