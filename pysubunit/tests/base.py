@@ -10,21 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import tempfile
-
-from testtools import TestCase
-
-from pysubunit import filters
+import fixtures
+import testtools
 
 
-class TestFindStream(TestCase):
-
-    def test_no_argv(self):
-        self.assertEqual('foo', filters.find_stream('foo', []))
-
-    def test_opens_file(self):
-        f = tempfile.NamedTemporaryFile()
-        f.write(b'foo')
-        f.flush()
-        stream = filters.find_stream('bar', [f.name])
-        self.assertEqual(b'foo', stream.read())
+class TestCase(testtools.TestCase):
+    def setUp(self):
+        super(TestCase, self).setUp()
+        stdout = self.useFixture(fixtures.StringStream('stdout')).stream
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', stdout))
+        stderr = self.useFixture(fixtures.StringStream('stderr')).stream
+        self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
+        self.useFixture(fixtures.LoggerFixture(nuke_handlers=False,
+                                               level=None))

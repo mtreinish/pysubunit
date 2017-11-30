@@ -27,7 +27,7 @@ import sys
 
 from testtools import ExtendedToStreamDecorator
 
-from pysubunit import StreamResultToBytes
+import pysubunit
 from pysubunit.test_results import AutoTimingTestResultDecorator
 from testtools import run as testtools_run
 
@@ -90,7 +90,7 @@ class SubunitTestRunner(object):
             stream = os.fdopen(fileno, 'wb', 0)
         else:
             stream = self.stream
-        result = StreamResultToBytes(stream)
+        result = pysubunit.StreamResultToBytes(stream)
         for test_id in test_ids:
             result.status(test_id=test_id, test_status='exists')
         return result, errors

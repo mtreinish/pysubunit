@@ -1,24 +1,20 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """Tests for subunit.TestResultStats."""
 
 import unittest
 
-from testtools.compat import _b, BytesIO, StringIO
+from testtools import compat
 
 import pysubunit
 
@@ -27,9 +23,9 @@ class TestTestResultStats(unittest.TestCase):
     """Test for TestResultStats, a TestResult object that generates stats."""
 
     def setUp(self):
-        self.output = StringIO()
+        self.output = compat.StringIO()
         self.result = pysubunit.TestResultStats(self.output)
-        self.input_stream = BytesIO()
+        self.input_stream = compat.BytesIO()
         self.test = pysubunit.ProtocolTestCase(self.input_stream)
 
     def test_stats_empty(self):
@@ -40,7 +36,7 @@ class TestTestResultStats(unittest.TestCase):
         self.assertEqual(set(), self.result.seen_tags)
 
     def setUpUsedStream(self):
-        self.input_stream.write(_b("""tags: global
+        self.input_stream.write(compat._b("""tags: global
 test passed
 success passed
 test failed
@@ -55,7 +51,7 @@ xfail todo
 """))
         self.input_stream.seek(0)
         self.test.run(self.result)
-    
+
     def test_stats_smoke_everything(self):
         # Statistics are calculated usefully.
         self.setUpUsedStream()

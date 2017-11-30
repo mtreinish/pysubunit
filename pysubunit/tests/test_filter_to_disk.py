@@ -1,37 +1,34 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2013 Subunit Contributors
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import io
 import os.path
 
-from fixtures import TempDir
-from testtools import TestCase
-from testtools.matchers import (
-    FileContains
-    )
+import fixtures
+from testtools import matchers
 
 from pysubunit import _to_disk
-from pysubunit.v2 import StreamResultToBytes
+from pysubunit.tests import base
+from pysubunit import v2
 
-class SmokeTest(TestCase):
+
+class SmokeTest(base.TestCase):
 
     def test_smoke(self):
-        output = os.path.join(self.useFixture(TempDir()).path, 'output')
+        output = os.path.join(
+            self.useFixture(fixtures.TempDir()).path, 'output')
         stdin = io.BytesIO()
         stdout = io.StringIO()
-        writer = StreamResultToBytes(stdin)
+        writer = v2.StreamResultToBytes(stdin)
         writer.startTestRun()
         writer.status(
             'foo', 'success', set(['tag']), file_name='fred',
@@ -41,9 +38,9 @@ class SmokeTest(TestCase):
         _to_disk.to_disk(['-d', output], stdin=stdin, stdout=stdout)
         self.expectThat(
             os.path.join(output, 'foo/test.json'),
-            FileContains(
+            matchers.FileContains(
                 '{"details": ["fred"], "id": "foo", "start": null, '
                 '"status": "success", "stop": null, "tags": ["tag"]}'))
         self.expectThat(
             os.path.join(output, 'foo/fred'),
-            FileContains('abcdefg'))
+            matchers.FileContains('abcdefg'))

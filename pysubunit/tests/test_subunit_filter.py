@@ -1,18 +1,14 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
-#  license at the users choice. A copy of both licenses are available in the
-#  project source as Apache-2.0 and BSD. You may not use this file except in
-#  compliance with one of these two licences.
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-#  license you chose for the specific language governing permissions and
-#  limitations under that license.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 """Tests for subunit.TestResultFilter."""
 
@@ -23,23 +19,22 @@ import sys
 import unittest
 
 import iso8601
-from testtools import TestCase
-from testtools.compat import _b, BytesIO
-from testtools.testresult.doubles import ExtendedTestResult, StreamResult
+from testtools import compat
+from testtools.testresult import doubles
 
 import pysubunit
-from pysubunit.test_results import make_tag_filter, TestResultFilter
-from pysubunit import ByteStreamToStreamResult, StreamResultToBytes
+from pysubunit import test_results
+from pysubunit.tests import base
 
 
-class TestTestResultFilter(TestCase):
+class TestTestResultFilter(base.TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
 
     # While TestResultFilter works on python objects, using a subunit stream
     # is an easy pithy way of getting a series of test objects to call into
     # the TestResult, and as TestResultFilter is intended for use with subunit
     # also has the benefit of detecting any interface skew issues.
-    example_subunit_stream = _b("""\
+    example_subunit_stream = compat._b("""\
 tags: global
 test passed
 success passed
@@ -65,26 +60,27 @@ xfail todo
         """
         if input_stream is None:
             input_stream = self.example_subunit_stream
-        test = pysubunit.ProtocolTestCase(BytesIO(input_stream))
+        test = pysubunit.ProtocolTestCase(compat.BytesIO(input_stream))
         test.run(result_filter)
 
     def test_default(self):
         """The default is to exclude success and include everything else."""
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result)
+        result_filter = test_results.TestResultFilter(filtered_result)
         self.run_tests(result_filter)
         # skips are seen as success by default python TestResult.
-        self.assertEqual(['error'],
+        self.assertEqual(
+            ['error'],
             [error[0].id() for error in filtered_result.errors])
-        self.assertEqual(['failed'],
-            [failure[0].id() for failure in
-            filtered_result.failures])
+        self.assertEqual(
+            ['failed'],
+            [failure[0].id() for failure in filtered_result.failures])
         self.assertEqual(4, filtered_result.testsRun)
 
     def test_tag_filter(self):
-        tag_filter = make_tag_filter(['global'], ['local'])
-        result = ExtendedTestResult()
-        result_filter = TestResultFilter(
+        tag_filter = test_results.make_tag_filter(['global'], ['local'])
+        result = doubles.ExtendedTestResult()
+        result_filter = test_results.TestResultFilter(
             result, filter_success=False, filter_predicate=tag_filter)
         self.run_tests(result_filter)
         tests_included = [
@@ -92,14 +88,14 @@ xfail todo
         tests_expected = list(map(
             pysubunit.RemotedTestCase,
             ['passed', 'error', 'skipped', 'todo']))
-        self.assertEquals(tests_expected, tests_included)
+        self.assertEqual(tests_expected, tests_included)
 
     def test_tags_tracked_correctly(self):
-        tag_filter = make_tag_filter(['a'], [])
-        result = ExtendedTestResult()
-        result_filter = TestResultFilter(
+        tag_filter = test_results.make_tag_filter(['a'], [])
+        result = doubles.ExtendedTestResult()
+        result_filter = test_results.TestResultFilter(
             result, filter_success=False, filter_predicate=tag_filter)
-        input_stream = _b(
+        input_stream = compat._b(
             "test: foo\n"
             "tags: a\n"
             "successful: foo\n"
@@ -107,7 +103,7 @@ xfail todo
             "successful: bar\n")
         self.run_tests(result_filter, input_stream)
         foo = pysubunit.RemotedTestCase('foo')
-        self.assertEquals(
+        self.assertEqual(
             [('startTest', foo),
              ('tags', set(['a']), set()),
              ('addSuccess', foo),
@@ -117,58 +113,68 @@ xfail todo
 
     def test_exclude_errors(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result, filter_error=True)
+        result_filter = test_results.TestResultFilter(
+            filtered_result, filter_error=True)
         self.run_tests(result_filter)
         # skips are seen as errors by default python TestResult.
         self.assertEqual([], filtered_result.errors)
-        self.assertEqual(['failed'],
-            [failure[0].id() for failure in
-            filtered_result.failures])
+        self.assertEqual(
+            ['failed'],
+            [failure[0].id() for failure in filtered_result.failures])
         self.assertEqual(3, filtered_result.testsRun)
 
     def test_fixup_expected_failures(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result,
+        result_filter = test_results.TestResultFilter(
+            filtered_result,
             fixup_expected_failures=set(["failed"]))
         self.run_tests(result_filter)
-        self.assertEqual(['failed', 'todo'],
+        self.assertEqual(
+            ['failed', 'todo'],
             [failure[0].id() for failure in filtered_result.expectedFailures])
         self.assertEqual([], filtered_result.failures)
         self.assertEqual(4, filtered_result.testsRun)
 
     def test_fixup_expected_errors(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result,
+        result_filter = test_results.TestResultFilter(
+            filtered_result,
             fixup_expected_failures=set(["error"]))
         self.run_tests(result_filter)
-        self.assertEqual(['error', 'todo'],
+        self.assertEqual(
+            ['error', 'todo'],
             [failure[0].id() for failure in filtered_result.expectedFailures])
         self.assertEqual([], filtered_result.errors)
         self.assertEqual(4, filtered_result.testsRun)
 
     def test_fixup_unexpected_success(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result, filter_success=False,
+        result_filter = test_results.TestResultFilter(
+            filtered_result, filter_success=False,
             fixup_expected_failures=set(["passed"]))
         self.run_tests(result_filter)
-        self.assertEqual(['passed'],
+        self.assertEqual(
+            ['passed'],
             [passed.id() for passed in filtered_result.unexpectedSuccesses])
         self.assertEqual(5, filtered_result.testsRun)
 
     def test_exclude_failure(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result, filter_failure=True)
+        result_filter = test_results.TestResultFilter(
+            filtered_result, filter_failure=True)
         self.run_tests(result_filter)
-        self.assertEqual(['error'],
+        self.assertEqual(
+            ['error'],
             [error[0].id() for error in filtered_result.errors])
-        self.assertEqual([],
-            [failure[0].id() for failure in
-            filtered_result.failures])
+        self.assertEqual(
+            [],
+            [failure[0].id() for failure in filtered_result.failures])
         self.assertEqual(3, filtered_result.testsRun)
 
     def test_exclude_skips(self):
         filtered_result = pysubunit.TestResultStats(None)
-        result_filter = TestResultFilter(filtered_result, filter_skip=True)
+        result_filter = test_results.TestResultFilter(
+            filtered_result, filter_skip=True)
         self.run_tests(result_filter)
         self.assertEqual(0, filtered_result.skipped_tests)
         self.assertEqual(2, filtered_result.failed_tests)
@@ -177,14 +183,16 @@ xfail todo
     def test_include_success(self):
         """Successes can be included if requested."""
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result,
+        result_filter = test_results.TestResultFilter(
+            filtered_result,
             filter_success=False)
         self.run_tests(result_filter)
-        self.assertEqual(['error'],
+        self.assertEqual(
+            ['error'],
             [error[0].id() for error in filtered_result.errors])
-        self.assertEqual(['failed'],
-            [failure[0].id() for failure in
-            filtered_result.failures])
+        self.assertEqual(
+            ['failed'],
+            [failure[0].id() for failure in filtered_result.failures])
         self.assertEqual(5, filtered_result.testsRun)
 
     def test_filter_predicate(self):
@@ -192,9 +200,12 @@ xfail todo
         # 0.0.7 and earlier did not support the 'tags' parameter, so we need
         # to test that we still support behaviour without it.
         filtered_result = unittest.TestResult()
+
         def filter_cb(test, outcome, err, details):
             return outcome == 'success'
-        result_filter = TestResultFilter(filtered_result,
+
+        result_filter = test_results.TestResultFilter(
+            filtered_result,
             filter_predicate=filter_cb,
             filter_success=False)
         self.run_tests(result_filter)
@@ -204,9 +215,12 @@ xfail todo
     def test_filter_predicate_with_tags(self):
         """You can filter by predicate callbacks that accept tags"""
         filtered_result = unittest.TestResult()
+
         def filter_cb(test, outcome, err, details, tags):
             return outcome == 'success'
-        result_filter = TestResultFilter(filtered_result,
+
+        result_filter = test_results.TestResultFilter(
+            filtered_result,
             filter_predicate=filter_cb,
             filter_success=False)
         self.run_tests(result_filter)
@@ -220,15 +234,15 @@ xfail todo
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
-        subunit_stream = _b('\n'.join([
+        subunit_stream = compat._b('\n'.join([
             "time: %s",
             "test: foo",
             "time: %s",
             "error: foo",
             "time: %s",
             ""]) % (date_a, date_b, date_c))
-        result = ExtendedTestResult()
-        result_filter = TestResultFilter(result)
+        result = doubles.ExtendedTestResult()
+        result_filter = test_results.TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
         foo = pysubunit.RemotedTestCase('foo')
         self.maxDiff = None
@@ -246,46 +260,41 @@ xfail todo
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
-        subunit_stream = _b('\n'.join([
+        subunit_stream = compat._b('\n'.join([
             "time: %s",
             "test: foo",
             "time: %s",
             "success: foo",
             "time: %s",
             ""]) % (date_a, date_b, date_c))
-        result = ExtendedTestResult()
-        result_filter = TestResultFilter(result)
+        result = doubles.ExtendedTestResult()
+        result_filter = test_results.TestResultFilter(result)
         result_filter.startTestRun()
         self.run_tests(result_filter, subunit_stream)
         result_filter.stopTestRun()
-        foo = pysubunit.RemotedTestCase('foo')
         self.maxDiff = None
         self.assertEqual(
             [('startTestRun',),
              ('time', date_a),
              ('time', date_c),
-             ('stopTestRun',),], result._events)
+             ('stopTestRun',)], result._events)
 
     def test_skip_preserved(self):
-        subunit_stream = _b('\n'.join([
+        subunit_stream = compat._b('\n'.join([
             "test: foo",
             "skip: foo",
             ""]))
-        result = ExtendedTestResult()
-        result_filter = TestResultFilter(result)
+        result = doubles.ExtendedTestResult()
+        result_filter = test_results.TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
         foo = pysubunit.RemotedTestCase('foo')
-        self.assertEquals(
+        self.assertEqual(
             [('startTest', foo),
              ('addSkip', foo, {}),
              ('stopTest', foo), ], result._events)
 
-    if sys.version_info < (2, 7):
-        # These tests require Python >=2.7.
-        del test_fixup_expected_failures, test_fixup_expected_errors, test_fixup_unexpected_success
 
-
-class TestFilterCommand(TestCase):
+class TestFilterCommand(base.TestCase):
 
     def run_command(self, args, stream):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -300,22 +309,21 @@ class TestFilterCommand(TestCase):
         return out
 
     def test_default(self):
-        byte_stream = BytesIO()
-        stream = StreamResultToBytes(byte_stream)
+        byte_stream = compat.BytesIO()
+        stream = pysubunit.StreamResultToBytes(byte_stream)
         stream.status(test_id="foo", test_status="inprogress")
         stream.status(test_id="foo", test_status="skip")
         output = self.run_command([], byte_stream.getvalue())
-        events = StreamResult()
-        ByteStreamToStreamResult(BytesIO(output)).run(events)
-        ids = set(event[1] for event in events._events)
+        events = doubles.StreamResult()
+        pysubunit.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
         self.assertEqual([
             ('status', 'foo', 'inprogress'),
             ('status', 'foo', 'skip'),
             ], [event[:3] for event in events._events])
 
     def test_tags(self):
-        byte_stream = BytesIO()
-        stream = StreamResultToBytes(byte_stream)
+        byte_stream = compat.BytesIO()
+        stream = pysubunit.StreamResultToBytes(byte_stream)
         stream.status(
             test_id="foo", test_status="inprogress", test_tags=set(["a"]))
         stream.status(
@@ -328,8 +336,8 @@ class TestFilterCommand(TestCase):
             test_id="baz", test_status="success", test_tags=set(["a"]))
         output = self.run_command(
             ['-s', '--with-tag', 'a'], byte_stream.getvalue())
-        events = StreamResult()
-        ByteStreamToStreamResult(BytesIO(output)).run(events)
+        events = doubles.StreamResult()
+        pysubunit.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
         ids = set(event[1] for event in events._events)
         self.assertEqual(set(['foo', 'baz']), ids)
 
@@ -339,7 +347,7 @@ class TestFilterCommand(TestCase):
 
     def test_passthrough(self):
         output = self.run_command([], b'hi thar')
-        byte_stream = BytesIO()
-        stream = StreamResultToBytes(byte_stream)
+        byte_stream = compat.BytesIO()
+        stream = pysubunit.StreamResultToBytes(byte_stream)
         stream.status(file_name="stdout", file_bytes=b'hi thar')
         self.assertEqual(byte_stream.getvalue(), output)
