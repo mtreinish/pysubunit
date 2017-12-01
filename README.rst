@@ -1,7 +1,15 @@
 pysubunit
 =========
 
-pysubunit is an alternative python implementation of the subunit protocol. The
+pysubunit is an alternative python implementation of the subunit protocol. It
+strives to provide a simple to use library for interacting and creating subunit
+streams. The multi-language `subunit library`_ is the canonical source for the
+v1 and v2 subunit protocol definitions.
+
+.. _subunit library: https://github.com/testing-cabal/subunit
+
+What is subunit?
+----------------
 
 Subunit is a streaming protocol for test results.
 
@@ -21,7 +29,7 @@ time or space), it has a well defined recovery mechanism for dealing with
 corrupted streams (e.g. where two processes write to the same stream
 concurrently, or where the stream generator suffers a bug).
 
-More details on both protocol version s can be found in the 'Protocol' section
+More details on both protocol versions can be found in the 'Protocol' section
 of this document.
 
 A number of useful things can be done easily with subunit:
@@ -49,8 +57,8 @@ Subunit supplies the following filters:
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
-Python
-------
+Running Python tests with subunit output
+----------------------------------------
 
 The most common way is to run an existing python test suite and have it output
 subunit via the ``pysubunit.run`` module::
@@ -62,8 +70,7 @@ Filter recipes
 
 To ignore some failing tests whose root cause is already known::
 
-  subunit-filter --without 'AttributeError.*flavor'
-
+  $ subunit-filter --without 'AttributeError.*flavor'
 
 The xUnit test model
 --------------------
