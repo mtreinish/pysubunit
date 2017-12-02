@@ -19,6 +19,7 @@ from testtools import matchers
 import pysubunit
 import pysubunit.test_results
 from pysubunit.tests import base
+from pysubunit import v2
 
 
 class TestSubUnitTags(base.TestCase):
@@ -54,7 +55,7 @@ class TestSubUnitTags(base.TestCase):
              b'\x83\x1b\x04test\x03\x03bar\x03foo\x04quux\xd2\x18\x1bC'),
             (b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
              b'\x83\x1b\x04test\x03\x03foo\x03bar\x04quux:\x05e\x80')]
-        stream = pysubunit.StreamResultToBytes(self.original)
+        stream = v2.StreamResultToBytes(self.original)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(
@@ -67,12 +68,12 @@ class TestSubUnitTags(base.TestCase):
 
     def test_remove_tag(self):
         reference = io.BytesIO()
-        stream = pysubunit.StreamResultToBytes(reference)
+        stream = v2.StreamResultToBytes(reference)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(
             test_id='test', test_status='success', test_tags=set(['foo']))
-        stream = pysubunit.StreamResultToBytes(self.original)
+        stream = v2.StreamResultToBytes(self.original)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
         stream.status(

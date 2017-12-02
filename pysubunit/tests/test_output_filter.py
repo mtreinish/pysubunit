@@ -18,11 +18,14 @@ from tempfile import NamedTemporaryFile
 
 from contextlib import contextmanager
 import iso8601
+import testscenarios
 from testtools import matchers
 from testtools.testresult import doubles
 
 from pysubunit import _output
 from pysubunit.tests import base
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class SafeOptionParser(optparse.OptionParser):

@@ -19,6 +19,8 @@ import csv
 import datetime
 
 import testtools
+import testtools.compat
+import testtools.content
 
 import iso8601
 import pysubunit
@@ -656,7 +658,7 @@ class TestByTestResult(testtools.TestResult):
     def _err_to_details(self, test, err, details):
         if details:
             return details
-        return {'traceback': testtools.compat.TracebackContent(err, test)}
+        return {'traceback': testtools.content.TracebackContent(err, test)}
 
     def addSuccess(self, test, details=None):
         super(TestByTestResult, self).addSuccess(test)
@@ -677,10 +679,10 @@ class TestByTestResult(testtools.TestResult):
         super(TestByTestResult, self).addSkip(test, reason, details)
         self._status = 'skip'
         if details is None:
-            details = {'reason': testtools.compat.text_content(reason)}
+            details = {'reason': testtools.content.text_content(reason)}
         elif reason:
             # XXX: What if details already has 'reason' key?
-            details['reason'] = testtools.compat.text_content(reason)
+            details['reason'] = testtools.content.text_content(reason)
         self._details = details
 
     def addExpectedFailure(self, test, err=None, details=None):

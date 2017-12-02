@@ -21,6 +21,7 @@ import testtools
 
 import pysubunit
 from pysubunit import test_results
+from pysubunit import v2
 
 
 def make_options(description):
@@ -74,7 +75,7 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
         # In all cases we encapsulate unknown inputs.
         if forward_stream is not None:
             # Send events to forward_stream as subunit.
-            forward_result = pysubunit.StreamResultToBytes(forward_stream)
+            forward_result = v2.StreamResultToBytes(forward_stream)
             # If we're passing non-subunit through, copy:
             if passthrough_stream is None:
                 # Not passing non-test events - split them off to nothing.
@@ -91,12 +92,12 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
             if not passthrough_subunit:
                 passthrough_result = test_results.CatFiles(passthrough_stream)
             else:
-                passthrough_result = pysubunit.StreamResultToBytes(
+                passthrough_result = v2.StreamResultToBytes(
                     passthrough_stream)
             result = testtools.StreamResultRouter(result)
             result.add_rule(passthrough_result, 'test_id', test_id=None)
-        test = pysubunit.ByteStreamToStreamResult(input_stream,
-                                                  non_subunit_name='stdout')
+        test = v2.ByteStreamToStreamResult(input_stream,
+                                           non_subunit_name='stdout')
     else:
         raise Exception("Unknown protocol version.")
     result.startTestRun()

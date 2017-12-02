@@ -19,8 +19,8 @@ from testtools import matchers
 from testtools.testresult import doubles
 from testtools.tests import test_testresult
 
-import pysubunit
 from pysubunit.tests import base
+from pysubunit import v2
 
 CONSTANT_ENUM = b'\xb3)\x01\x0c\x03foo\x08U_\x1b'
 CONSTANT_INPROGRESS = b'\xb3)\x02\x0c\x03foo\x8e\xc1-\xb5'
@@ -46,17 +46,17 @@ class TestStreamResultToBytesContract(
     """Check that StreamResult behaves as testtools expects."""
 
     def _make_result(self):
-        return pysubunit.StreamResultToBytes(BytesIO())
+        return v2.StreamResultToBytes(BytesIO())
 
 
 class TestStreamResultToBytes(base.TestCase):
 
     def _make_result(self):
         output = BytesIO()
-        return pysubunit.StreamResultToBytes(output), output
+        return v2.StreamResultToBytes(output), output
 
     def test_numbers(self):
-        result = pysubunit.StreamResultToBytes(BytesIO())
+        result = v2.StreamResultToBytes(BytesIO())
         packet = []
         self.assertRaises(Exception, result._write_number, -1, packet)  # noqa
         self.assertEqual([], packet)
@@ -220,7 +220,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_non_pysubunit_encapsulated(self):
         source = BytesIO(b"foo\nbar\n")
         result = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(
+        v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual([
             ('status', None, None, None, True, 'stdout', b'f', False, None,
@@ -247,7 +247,7 @@ class TestByteStreamToStreamResult(base.TestCase):
         source = BytesIO(utf8_bytes)
         # Should be treated as one character (it is u'\u3cca') and wrapped
         result = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(
+        v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(
             result)
         self.assertEqual([
@@ -262,7 +262,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_non_subunit_disabled_raises(self):
         source = BytesIO(b"foo\nbar\n")
         result = doubles.StreamResult()
-        case = pysubunit.ByteStreamToStreamResult(source)
+        case = v2.ByteStreamToStreamResult(source)
         e = self.assertRaises(Exception, case.run, result)  # noqa
         self.assertEqual(b'f', e.args[1])
         self.assertEqual(b'oo\nbar\n', source.read())
@@ -271,7 +271,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_trivial_enumeration(self):
         source = BytesIO(CONSTANT_ENUM)
         result = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(
+        v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual([
@@ -282,7 +282,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_multiple_events(self):
         source = BytesIO(CONSTANT_ENUM + CONSTANT_ENUM)
         result = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(
+        v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual([
@@ -313,7 +313,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def check_events(self, source_bytes, events):
         source = BytesIO(source_bytes)
         result = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(
+        v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual(events, result._events)
@@ -349,7 +349,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_file_content_length_into_checksum(self):
         # A bad file content length which creeps into the checksum.
         bad_file_length_content = (b'\xb3!@\x13\x06barney\x04woo\xdc\xe2\xdb'
-                                   '\x35')
+                                   b'\x35')
         self.check_events(bad_file_length_content, [
             self._event(test_id="subunit.parser", eof=True,
                         file_name="Packet data",
@@ -358,7 +358,7 @@ class TestByteStreamToStreamResult(base.TestCase):
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                         file_name="Parser Error",
                         file_bytes=b"File content extends past end of packet: "
-                                   "claimed 4 bytes, 3 available",
+                                   b"claimed 4 bytes, 3 available",
                         mime_type="text/plain;charset=utf8"),
             ])
 
@@ -371,7 +371,7 @@ class TestByteStreamToStreamResult(base.TestCase):
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                         file_name="Parser Error",
                         file_bytes=b"3 byte maximum given but 4 byte value "
-                                   "found.",
+                                   b"found.",
                         mime_type="text/plain;charset=utf8"),
             ])
 
@@ -433,7 +433,7 @@ class TestByteStreamToStreamResult(base.TestCase):
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                         file_name="Parser Error",
                         file_bytes=b'UTF8 string at offset 2 contains NUL '
-                                   'byte',
+                                   b'byte',
                         mime_type="text/plain;charset=utf8"),
             ])
 
@@ -447,14 +447,14 @@ class TestByteStreamToStreamResult(base.TestCase):
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                         file_name="Parser Error",
                         file_bytes=b'UTF8 string at offset 2 extends past end '
-                                   ' of packet: claimed 63 bytes, 10 '
-                                   'available',
+                                   b' of packet: claimed 63 bytes, 10 '
+                                   b'available',
                         mime_type="text/plain;charset=utf8"),
             ])
 
     def test_route_code_and_file_content(self):
         content = BytesIO()
-        pysubunit.StreamResultToBytes(content).status(
+        v2.StreamResultToBytes(content).status(
             route_code='0', mime_type='text/plain', file_name='bar',
             file_bytes=b'foo')
         self.check_event(content.getvalue(), test_id=None, file_name='bar',
@@ -465,7 +465,7 @@ class TestByteStreamToStreamResult(base.TestCase):
     def test_hypothesis_decoding(self, code_bytes):
         source = BytesIO(code_bytes)
         result = doubles.StreamResult()
-        stream = pysubunit.ByteStreamToStreamResult(
+        stream = v2.ByteStreamToStreamResult(
             source, non_subunit_name="stdout")
         stream.run(result)
         self.assertEqual(b'', source.read())

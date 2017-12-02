@@ -18,9 +18,9 @@ from testtools.compat import _b
 from testtools.matchers import StartsWith
 from testtools.testresult.doubles import StreamResult
 
-import pysubunit
 from pysubunit import run
 from pysubunit.tests import base
+from pysubunit import v2
 
 
 class TestSubunitTestRunner(base.TestCase):
@@ -32,7 +32,7 @@ class TestSubunitTestRunner(base.TestCase):
         runner.run(test)
         bytestream.seek(0)
         eventstream = StreamResult()
-        pysubunit.ByteStreamToStreamResult(bytestream).run(eventstream)
+        v2.ByteStreamToStreamResult(bytestream).run(eventstream)
         timestamps = [
             event[-1] for event in eventstream._events if event is not None]
         self.assertNotEqual([], timestamps)
@@ -46,7 +46,7 @@ class TestSubunitTestRunner(base.TestCase):
         runner.run(case)
         bytestream.seek(0)
         eventstream = StreamResult()
-        pysubunit.ByteStreamToStreamResult(bytestream).run(eventstream)
+        v2.ByteStreamToStreamResult(bytestream).run(eventstream)
         self.assertEqual([
             ('status', 'name1', 'exists'),
             ('status', 'name2', 'exists'),

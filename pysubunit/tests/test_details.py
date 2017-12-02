@@ -12,6 +12,8 @@
 
 
 from testtools import compat
+from testtools import content
+from testtools import content_type
 
 import pysubunit
 from pysubunit.tests import base
@@ -39,9 +41,9 @@ class TestSimpleDetails(base.TestCase):
     def test_get_details(self):
         parser = pysubunit.details.SimpleDetailsParser(None)
         expected = {}
-        expected['traceback'] = pysubunit.content.Content(
-            pysubunit.content_type.ContentType("text", "x-traceback",
-                                               {'charset': 'utf8'}),
+        expected['traceback'] = content.Content(
+            content_type.ContentType("text", "x-traceback",
+                                     {'charset': 'utf8'}),
             lambda: [compat._b("")])
         found = parser.get_details()
         self.assertEqual(expected.keys(), found.keys())
@@ -54,8 +56,8 @@ class TestSimpleDetails(base.TestCase):
     def test_get_details_skip(self):
         parser = pysubunit.details.SimpleDetailsParser(None)
         expected = {}
-        expected['reason'] = pysubunit.content.Content(
-            pysubunit.content_type.ContentType("text", "plain"),
+        expected['reason'] = content.Content(
+            content_type.ContentType("text", "plain"),
             lambda: [compat._b("")])
         found = parser.get_details("skip")
         self.assertEqual(expected, found)
@@ -63,8 +65,8 @@ class TestSimpleDetails(base.TestCase):
     def test_get_details_success(self):
         parser = pysubunit.details.SimpleDetailsParser(None)
         expected = {}
-        expected['message'] = pysubunit.content.Content(
-            pysubunit.content_type.ContentType("text", "plain"),
+        expected['message'] = content.Content(
+            content_type.ContentType("text", "plain"),
             lambda: [compat._b("")])
         found = parser.get_details("success")
         self.assertEqual(expected, found)
@@ -88,8 +90,8 @@ class TestMultipartDetails(base.TestCase):
         parser.lineReceived(compat._b("serialised\n"))
         parser.lineReceived(compat._b("form0\r\n"))
         expected = {}
-        expected['something'] = pysubunit.content.Content(
-            pysubunit.content_type.ContentType("text", "plain"),
+        expected['something'] = content.Content(
+            content_type.ContentType("text", "plain"),
             lambda: [compat._b("serialised\nform")])
         found = parser.get_details()
         self.assertEqual(expected.keys(), found.keys())

@@ -33,6 +33,7 @@ import testtools
 import pysubunit
 from pysubunit import filters
 from pysubunit import test_results
+from pysubunit import v2
 
 
 def make_options(description):
@@ -125,7 +126,7 @@ def _make_result(output, options, predicate):
         fixup_expected_failures.update(pysubunit.read_test_list(path))
     return testtools.StreamToExtendedDecorator(test_results.TestResultFilter(
         testtools.ExtendedToStreamDecorator(
-            pysubunit.StreamResultToBytes(output)),
+            v2.StreamResultToBytes(output)),
         filter_error=options.error,
         filter_failure=options.failure,
         filter_success=options.success,

@@ -116,6 +116,7 @@ class TestTestProtocolServerPipe(base.TestCase):
 class TestTestProtocolServerStartTest(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerStartTest, self).setUp()
         self.client = doubles.Python26TestResult()
         self.stream = compat.BytesIO()
         self.protocol = pysubunit.TestProtocolServer(self.client, self.stream)
@@ -154,6 +155,7 @@ class TestTestProtocolServerStartTest(base.TestCase):
 class TestTestProtocolServerPassThrough(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerPassThrough, self).setUp()
         self.stdout = compat.BytesIO()
         self.test = pysubunit.RemotedTestCase("old mcdonald")
         self.client = doubles.ExtendedTestResult()
@@ -293,6 +295,7 @@ class TestTestProtocolServerPassThrough(base.TestCase):
 class TestTestProtocolServerLostConnection(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerLostConnection, self).setUp()
         self.client = doubles.Python26TestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.test = pysubunit.RemotedTestCase("old mcdonald")
@@ -397,6 +400,7 @@ class TestTestProtocolServerLostConnection(base.TestCase):
 class TestInTestMultipart(base.TestCase):
 
     def setUp(self):
+        super(TestInTestMultipart, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(compat._b("test mcdonalds farm\n"))
@@ -416,6 +420,7 @@ class TestInTestMultipart(base.TestCase):
 class TestTestProtocolServerAddError(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerAddError, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(compat._b("test mcdonalds farm\n"))
@@ -476,6 +481,7 @@ class TestTestProtocolServerAddError(base.TestCase):
 class TestTestProtocolServerAddFailure(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerAddFailure, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(compat._b("test mcdonalds farm\n"))
@@ -771,6 +777,7 @@ class TestTestProtocolServerAddSkip(base.TestCase):
 
     def setUp(self):
         """Setup a test object ready to be skipped."""
+        super(TestTestProtocolServerAddSkip, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(compat._b("test mcdonalds farm\n"))
@@ -821,6 +828,7 @@ class TestTestProtocolServerAddSkip(base.TestCase):
 class TestTestProtocolServerAddSuccess(base.TestCase):
 
     def setUp(self):
+        super(TestTestProtocolServerAddSuccess, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(compat._b("test mcdonalds farm\n"))
@@ -914,6 +922,7 @@ class TestTestProtocolServerStreamTags(base.TestCase):
     """Test managing tags on the protocol level."""
 
     def setUp(self):
+        super(TestTestProtocolServerStreamTags, self).setUp()
         self.client = doubles.ExtendedTestResult()
         self.protocol = pysubunit.TestProtocolServer(self.client)
 

@@ -22,9 +22,9 @@ import testtools
 
 from pysubunit import chunked
 
-end_marker = six.binary_type("]\n")
-quoted_marker = six.binary_type(" ]")
-empty = six.binary_type('')
+end_marker = six.binary_type("]\n".encode('latin-1'))
+quoted_marker = six.binary_type(" ]".encode('latin-1'))
+empty = six.binary_type(''.encode('latin-1'))
 
 
 class DetailsParser(object):

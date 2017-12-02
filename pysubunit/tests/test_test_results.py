@@ -61,6 +61,7 @@ class TimeCapturingResult(unittest.TestResult):
 class TestHookedTestResultDecorator(base.TestCase):
 
     def setUp(self):
+        super(TestHookedTestResultDecorator, self).setUp()
         # An end to the chain
         terminal = unittest.TestResult()
         # Asserts that the call was made to self.result before asserter was
@@ -77,6 +78,7 @@ class TestHookedTestResultDecorator(base.TestCase):
         # The hook in asserter must have been called too, otherwise the
         # assertion about ordering won't have completed.
         self.assertEqual(1, self.decorated._calls)
+        super(TestHookedTestResultDecorator, self).tearDown()
 
     def test_startTest(self):
         self.result.startTest(self)
@@ -145,6 +147,7 @@ class TestHookedTestResultDecorator(base.TestCase):
 class TestAutoTimingTestResultDecorator(base.TestCase):
 
     def setUp(self):
+        super(TestAutoTimingTestResultDecorator, self).setUp()
         # And end to the chain which captures time events.
         terminal = TimeCapturingResult()
         # The result object under test.

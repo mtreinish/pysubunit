@@ -19,6 +19,7 @@ from testtools.testresult import doubles
 
 import pysubunit
 from pysubunit.tests import base
+from pysubunit import v2
 
 UTF8_TEXT = 'text/plain; charset=UTF8'
 
@@ -338,7 +339,7 @@ class TestTAP2SubUnit(base.TestCase):
         self.assertEqual(0, result)
         self.subunit.seek(0)
         events = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(self.subunit).run(events)
+        v2.ByteStreamToStreamResult(self.subunit).run(events)
         self.check_events([
             ('status', 'test 1 - a fail but', 'xfail', None, False,
              'tap comment', b'but is TODO', True, 'text/plain; charset=UTF8',
@@ -388,5 +389,5 @@ class TestTAP2SubUnit(base.TestCase):
     def check_events(self, events):
         self.subunit.seek(0)
         eventstream = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(self.subunit).run(eventstream)
+        v2.ByteStreamToStreamResult(self.subunit).run(eventstream)
         self.assertEqual(events, eventstream._events)

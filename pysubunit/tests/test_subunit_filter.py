@@ -25,6 +25,7 @@ from testtools.testresult import doubles
 import pysubunit
 from pysubunit import test_results
 from pysubunit.tests import base
+from pysubunit import v2
 
 
 class TestTestResultFilter(base.TestCase):
@@ -310,12 +311,12 @@ class TestFilterCommand(base.TestCase):
 
     def test_default(self):
         byte_stream = compat.BytesIO()
-        stream = pysubunit.StreamResultToBytes(byte_stream)
+        stream = v2.StreamResultToBytes(byte_stream)
         stream.status(test_id="foo", test_status="inprogress")
         stream.status(test_id="foo", test_status="skip")
         output = self.run_command([], byte_stream.getvalue())
         events = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
+        v2.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
         self.assertEqual([
             ('status', 'foo', 'inprogress'),
             ('status', 'foo', 'skip'),
@@ -323,7 +324,7 @@ class TestFilterCommand(base.TestCase):
 
     def test_tags(self):
         byte_stream = compat.BytesIO()
-        stream = pysubunit.StreamResultToBytes(byte_stream)
+        stream = v2.StreamResultToBytes(byte_stream)
         stream.status(
             test_id="foo", test_status="inprogress", test_tags=set(["a"]))
         stream.status(
@@ -337,7 +338,7 @@ class TestFilterCommand(base.TestCase):
         output = self.run_command(
             ['-s', '--with-tag', 'a'], byte_stream.getvalue())
         events = doubles.StreamResult()
-        pysubunit.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
+        v2.ByteStreamToStreamResult(compat.BytesIO(output)).run(events)
         ids = set(event[1] for event in events._events)
         self.assertEqual(set(['foo', 'baz']), ids)
 
@@ -348,6 +349,6 @@ class TestFilterCommand(base.TestCase):
     def test_passthrough(self):
         output = self.run_command([], b'hi thar')
         byte_stream = compat.BytesIO()
-        stream = pysubunit.StreamResultToBytes(byte_stream)
+        stream = v2.StreamResultToBytes(byte_stream)
         stream.status(file_name="stdout", file_bytes=b'hi thar')
         self.assertEqual(byte_stream.getvalue(), output)
