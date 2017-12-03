@@ -1,3 +1,5 @@
+AUTHORS
+ChangeLog
 /c/lib/child.os
 /c/tests/test_child
 .sconsign
@@ -60,3 +62,6 @@ perl/MYMETA.yml
 .coverage*
 cover/
 !.coveragerc
+/build
+/dist
+doc/build
