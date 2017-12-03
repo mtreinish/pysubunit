@@ -35,7 +35,7 @@ class SimpleDetailsParser(DetailsParser):
     """Parser for single-part [] delimited details."""
 
     def __init__(self, state):
-        self._message = six.binary_type("")
+        self._message = six.binary_type("".encode('latin-1'))
         self._state = state
 
     def lineReceived(self, line):

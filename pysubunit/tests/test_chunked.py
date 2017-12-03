@@ -16,7 +16,7 @@
 import io
 import unittest
 
-import six
+from testtools import compat
 
 import pysubunit.chunked
 
@@ -32,109 +32,109 @@ class TestDecode(unittest.TestCase):
         self.assertRaises(ValueError, self.decoder.close)
 
     def test_close_body_short_errors(self):
-        self.assertEqual(None, self.decoder.write(six.binary_type(
-            '2\r\na'.encode('latin-1'))))
+        self.assertEqual(None, self.decoder.write(compat._b(
+            '2\r\na')))
         self.assertRaises(ValueError, self.decoder.close)
 
     def test_close_body_buffered_data_errors(self):
-        self.assertEqual(None, self.decoder.write(six.binary_type(
-            '2\r'.encode('latin-1'))))
+        self.assertEqual(None, self.decoder.write(compat._b(
+            '2\r')))
         self.assertRaises(ValueError, self.decoder.close)
 
     def test_close_after_finished_stream_safe(self):
-        self.assertEqual(None, self.decoder.write(six.binary_type(
-            '2\r\nab'.encode('latin-1'))))
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
-                             '0\r\n'.encode('latin-1'))))
+        self.assertEqual(None, self.decoder.write(compat._b(
+            '2\r\nab')))
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
+                             '0\r\n')))
         self.decoder.close()
 
     def test_decode_nothing(self):
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
-                             '0\r\n'.encode('latin-1'))))
-        self.assertEqual(six.binary_type(''), self.output.getvalue())
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
+                             '0\r\n')))
+        self.assertEqual(compat._b(''), self.output.getvalue())
 
     def test_decode_serialised_form(self):
-        self.assertEqual(None, self.decoder.write(six.binary_type(
-            "F\r\n".encode('latin-1'))))
+        self.assertEqual(None, self.decoder.write(compat._b(
+            "F\r\n")))
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type(
-                             "serialised\n".encode('latin-1'))))
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
-                             "form0\r\n".encode('latin-1'))))
+                         self.decoder.write(compat._b(
+                             "serialised\n")))
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
+                             "form0\r\n")))
 
     def test_decode_short(self):
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
-                             '3\r\nabc0\r\n'.encode('latin-1'))))
-        self.assertEqual(six.binary_type('abc'.encode('latin-1')),
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
+                             '3\r\nabc0\r\n')))
+        self.assertEqual(compat._b('abc'),
                          self.output.getvalue())
 
     def test_decode_combines_short(self):
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
-                             '6\r\nabcdef0\r\n'.encode('latin-1'))))
-        self.assertEqual(six.binary_type('abcdef'.encode('latin-1')),
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
+                             '6\r\nabcdef0\r\n')))
+        self.assertEqual(compat._b('abcdef'),
                          self.output.getvalue())
 
     def test_decode_excess_bytes_from_write(self):
-        self.assertEqual(six.binary_type('1234'),
-                         self.decoder.write(six.binary_type(
+        self.assertEqual(compat._b('1234'),
+                         self.decoder.write(compat._b(
                              '3\r\nabc0\r\n1234')))
-        self.assertEqual(six.binary_type('abc'), self.output.getvalue())
+        self.assertEqual(compat._b('abc'), self.output.getvalue())
 
     def test_decode_write_after_finished_errors(self):
-        self.assertEqual(six.binary_type('1234'),
-                         self.decoder.write(six.binary_type(
+        self.assertEqual(compat._b('1234'),
+                         self.decoder.write(compat._b(
                              '3\r\nabc0\r\n1234')))
-        self.assertRaises(ValueError, self.decoder.write, six.binary_type(''))
+        self.assertRaises(ValueError, self.decoder.write, compat._b(''))
 
     def test_decode_hex(self):
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type(
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b(
                              'A\r\n12345678900\r\n')))
-        self.assertEqual(six.binary_type('1234567890'), self.output.getvalue())
+        self.assertEqual(compat._b('1234567890'), self.output.getvalue())
 
     def test_decode_long_ranges(self):
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type('10000\r\n')))
+                         self.decoder.write(compat._b('10000\r\n')))
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type('1' * 65536)))
+                         self.decoder.write(compat._b('1' * 65536)))
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type('10000\r\n')))
+                         self.decoder.write(compat._b('10000\r\n')))
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type('2' * 65536)))
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type('0\r\n')))
-        self.assertEqual(six.binary_type('1' * 65536 + '2' * 65536),
+                         self.decoder.write(compat._b('2' * 65536)))
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b('0\r\n')))
+        self.assertEqual(compat._b('1' * 65536 + '2' * 65536),
                          self.output.getvalue())
 
     def test_decode_newline_nonstrict(self):
         """Tolerate chunk markers with no CR character."""
         # From <http://pad.lv/505078>
         self.decoder = pysubunit.chunked.Decoder(self.output, strict=False)
-        self.assertEqual(None, self.decoder.write(six.binary_type('a\n')))
+        self.assertEqual(None, self.decoder.write(compat._b('a\n')))
         self.assertEqual(None,
-                         self.decoder.write(six.binary_type('abcdeabcde')))
-        self.assertEqual(six.binary_type(''),
-                         self.decoder.write(six.binary_type('0\n')))
-        self.assertEqual(six.binary_type('abcdeabcde'), self.output.getvalue())
+                         self.decoder.write(compat._b('abcdeabcde')))
+        self.assertEqual(compat._b(''),
+                         self.decoder.write(compat._b('0\n')))
+        self.assertEqual(compat._b('abcdeabcde'), self.output.getvalue())
 
     def test_decode_strict_newline_only(self):
         """Reject chunk markers with no CR character in strict mode."""
         # From <http://pad.lv/505078>
         self.assertRaises(ValueError,
-                          self.decoder.write, six.binary_type('a\n'))
+                          self.decoder.write, compat._b('a\n'))
 
     def test_decode_strict_multiple_crs(self):
         self.assertRaises(ValueError,
-                          self.decoder.write, six.binary_type('a\r\r\n'))
+                          self.decoder.write, compat._b('a\r\r\n'))
 
     def test_decode_short_header(self):
         self.assertRaises(ValueError,
-                          self.decoder.write, six.binary_type('\n'))
+                          self.decoder.write, compat._b('\n'))
 
 
 class TestEncode(unittest.TestCase):
@@ -146,36 +146,36 @@ class TestEncode(unittest.TestCase):
 
     def test_encode_nothing(self):
         self.encoder.close()
-        self.assertEqual(six.binary_type('0\r\n'), self.output.getvalue())
+        self.assertEqual(compat._b('0\r\n'), self.output.getvalue())
 
     def test_encode_empty(self):
-        self.encoder.write(six.binary_type(''))
+        self.encoder.write(compat._b(''))
         self.encoder.close()
-        self.assertEqual(six.binary_type('0\r\n'), self.output.getvalue())
+        self.assertEqual(compat._b('0\r\n'), self.output.getvalue())
 
     def test_encode_short(self):
-        self.encoder.write(six.binary_type('abc'))
+        self.encoder.write(compat._b('abc'))
         self.encoder.close()
-        self.assertEqual(six.binary_type('3\r\nabc0\r\n'),
+        self.assertEqual(compat._b('3\r\nabc0\r\n'),
                          self.output.getvalue())
 
     def test_encode_combines_short(self):
-        self.encoder.write(six.binary_type('abc'))
-        self.encoder.write(six.binary_type('def'))
+        self.encoder.write(compat._b('abc'))
+        self.encoder.write(compat._b('def'))
         self.encoder.close()
-        self.assertEqual(six.binary_type('6\r\nabcdef0\r\n'),
+        self.assertEqual(compat._b('6\r\nabcdef0\r\n'),
                          self.output.getvalue())
 
     def test_encode_over_9_is_in_hex(self):
-        self.encoder.write(six.binary_type('1234567890'))
+        self.encoder.write(compat._b('1234567890'))
         self.encoder.close()
-        self.assertEqual(six.binary_type('A\r\n12345678900\r\n'),
+        self.assertEqual(compat._b('A\r\n12345678900\r\n'),
                          self.output.getvalue())
 
     def test_encode_long_ranges_not_combined(self):
-        self.encoder.write(six.binary_type('1' * 65536))
-        self.encoder.write(six.binary_type('2' * 65536))
+        self.encoder.write(compat._b('1' * 65536))
+        self.encoder.write(compat._b('2' * 65536))
         self.encoder.close()
         self.assertEqual(
-            six.binary_type('10000\r\n' + '1' * 65536 + '10000\r\n' +
-                            '2' * 65536 + '0\r\n'), self.output.getvalue())
+            compat._b('10000\r\n' + '1' * 65536 + '10000\r\n' +
+                      '2' * 65536 + '0\r\n'), self.output.getvalue())

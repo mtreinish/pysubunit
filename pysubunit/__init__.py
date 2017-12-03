@@ -127,7 +127,6 @@ except ImportError:
     _UnsupportedOperation = AttributeError
 
 import iso8601
-import six
 import testtools
 from testtools import compat
 from testtools.testresult.real import _StringException
@@ -197,7 +196,7 @@ class DiscardStream(object):
         pass
 
     def read(self, len=0):
-        return six.binary_type('')
+        return compat._b('')
 
 
 class _ParserState(object):
@@ -205,19 +204,19 @@ class _ParserState(object):
 
     def __init__(self, parser):
         self.parser = parser
-        self._test_sym = (six.binary_type('test'),
-                          six.binary_type('testing'))
-        self._colon_sym = six.binary_type(':')
-        self._error_sym = (six.binary_type('error'),)
-        self._failure_sym = (six.binary_type('failure'),)
-        self._progress_sym = (six.binary_type('progress'),)
-        self._skip_sym = six.binary_type('skip')
-        self._success_sym = (six.binary_type('success'),
-                             six.binary_type('successful'))
-        self._tags_sym = (six.binary_type('tags'),)
-        self._time_sym = (six.binary_type('time'),)
-        self._xfail_sym = (six.binary_type('xfail'),)
-        self._uxsuccess_sym = (six.binary_type('uxsuccess'),)
+        self._test_sym = (compat._b('test'),
+                          compat._b('testing'))
+        self._colon_sym = compat._b(':')
+        self._error_sym = (compat._b('error'),)
+        self._failure_sym = (compat._b('failure'),)
+        self._progress_sym = (compat._b('progress'),)
+        self._skip_sym = compat._b('skip')
+        self._success_sym = (compat._b('success'),
+                             compat._b('successful'))
+        self._tags_sym = (compat._b('tags'),)
+        self._time_sym = (compat._b('time'),)
+        self._xfail_sym = (compat._b('xfail'),)
+        self._uxsuccess_sym = (compat._b('uxsuccess'),)
         self._start_simple = compat._u(" [")
         self._start_multipart = compat. _u(" [ multipart")
 
@@ -529,9 +528,9 @@ class TestProtocolServer(object):
         # start with outside test.
         self._state = self._outside_test
         # Avoid casts on every call
-        self._plusminus = six.binary_type('+-')
-        self._push_sym = six.binary_type('push')
-        self._pop_sym = six.binary_type('pop')
+        self._plusminus = compat._b('+-')
+        self._push_sym = compat._b('push')
+        self._pop_sym = compat._b('pop')
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
@@ -623,14 +622,14 @@ class TestProtocolClient(testtools.testresult.TestResult):
         testtools.testresult.TestResult.__init__(self)
         stream = make_stream_binary(stream)
         self._stream = stream
-        self._progress_fmt = six.binary_type("progress: ")
-        self._bytes_eol = six.binary_type("\n")
-        self._progress_plus = six.binary_type("+")
-        self._progress_push = six.binary_type("push")
-        self._progress_pop = six.binary_type("pop")
-        self._empty_bytes = six.binary_type("")
-        self._start_simple = six.binary_type(" [\n")
-        self._end_simple = six.binary_type("]\n")
+        self._progress_fmt = compat._b("progress: ")
+        self._bytes_eol = compat._b("\n")
+        self._progress_plus = compat._b("+")
+        self._progress_push = compat._b("push")
+        self._progress_pop = compat._b("pop")
+        self._empty_bytes = compat._b("")
+        self._start_simple = compat._b(" [\n")
+        self._end_simple = compat._b("]\n")
 
     def addError(self, test, error=None, details=None):
         """Report an error in test test.
@@ -701,7 +700,7 @@ class TestProtocolClient(testtools.testresult.TestResult):
             and details is still optional.
         """
         self._stream.write(
-            six.binary_type("%s: " % outcome) + self._test_id(test))
+            compat._b("%s: " % outcome) + self._test_id(test))
         if error_permitted:
             if error is None and details is None:
                 raise ValueError
@@ -716,7 +715,7 @@ class TestProtocolClient(testtools.testresult.TestResult):
         elif details is not None:
             self._write_details(details)
         else:
-            self._stream.write(six.binary_type("\n"))
+            self._stream.write(compat._b("\n"))
         if details is not None or error is not None:
             self._stream.write(self._end_simple)
 
@@ -725,8 +724,8 @@ class TestProtocolClient(testtools.testresult.TestResult):
         if reason is None:
             self._addOutcome("skip", test, error=None, details=details)
         else:
-            self._stream.write(six.binary_type("skip: %s [\n" % test.id()))
-            self._stream.write(six.binary_type("%s\n" % reason))
+            self._stream.write(compat._b("skip: %s [\n" % test.id()))
+            self._stream.write(compat._b("%s\n" % reason))
             self._stream.write(self._end_simple)
 
     def addSuccess(self, test, details=None):
@@ -760,8 +759,8 @@ class TestProtocolClient(testtools.testresult.TestResult):
         """Mark a test as starting its test run."""
         super(TestProtocolClient, self).startTest(test)
         self._stream.write(
-            six.binary_type(
-                "test: ") + self._test_id(test) + six.binary_type("\n"))
+            compat._b(
+                "test: ") + self._test_id(test) + compat._b("\n"))
         self._stream.flush()
 
     def stopTest(self, test):
@@ -780,7 +779,7 @@ class TestProtocolClient(testtools.testresult.TestResult):
         """
         if whence == PROGRESS_CUR and offset > -1:
             prefix = self._progress_plus
-            offset = six.binary_type(str(offset))
+            offset = compat._b(str(offset))
         elif whence == PROGRESS_PUSH:
             prefix = self._empty_bytes
             offset = self._progress_push
@@ -789,7 +788,7 @@ class TestProtocolClient(testtools.testresult.TestResult):
             offset = self._progress_pop
         else:
             prefix = self._empty_bytes
-            offset = six.binary_type(str(offset))
+            offset = compat._b(str(offset))
         self._stream.write(self._progress_fmt + prefix + offset +
                            self._bytes_eol)
 
@@ -799,9 +798,9 @@ class TestProtocolClient(testtools.testresult.TestResult):
             return
         tags = set([tag.encode('utf8') for tag in new_tags])
         tags.update(
-            [six.binary_type("-") + tag.encode('utf8') for tag in gone_tags])
-        tag_line = six.binary_type(
-            "tags: ") + six.binary_type(" ").join(tags) + six.binary_type("\n")
+            [compat._b("-") + tag.encode('utf8') for tag in gone_tags])
+        tag_line = compat._b(
+            "tags: ") + compat._b(" ").join(tags) + compat._b("\n")
         self._stream.write(tag_line)
 
     def time(self, a_datetime):
@@ -811,7 +810,7 @@ class TestProtocolClient(testtools.testresult.TestResult):
         """
         time = a_datetime.astimezone(iso8601.UTC)
         self._stream.write(
-            six.binary_type("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
+            compat._b("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
                 time.year, time.month, time.day, time.hour, time.minute,
                 time.second, time.microsecond)))
 
@@ -820,18 +819,18 @@ class TestProtocolClient(testtools.testresult.TestResult):
 
         :param details: An extended details dict for a test outcome.
         """
-        self._stream.write(six.binary_type(" [ multipart\n"))
+        self._stream.write(compat._b(" [ multipart\n"))
         for name, content in sorted(details.items()):
-            self._stream.write(six.binary_type("Content-Type: %s/%s" % (
+            self._stream.write(compat._b("Content-Type: %s/%s" % (
                 content.content_type.type, content.content_type.subtype)))
             parameters = content.content_type.parameters
             if parameters:
-                self._stream.write(six.binary_type(";"))
+                self._stream.write(compat._b(";"))
                 param_strs = []
                 for param, value in parameters.items():
                     param_strs.append("%s=%s" % (param, value))
-                self._stream.write(six.binary_type(",".join(param_strs)))
-            self._stream.write(six.binary_type("\n%s\n" % name))
+                self._stream.write(compat._b(",".join(param_strs)))
+            self._stream.write(compat._b("\n%s\n" % name))
             encoder = chunked.Encoder(self._stream)
             list(map(encoder.write, content.iter_bytes()))
             encoder.close()
@@ -1323,7 +1322,7 @@ def _unwrap_text(stream):
     except (_UnsupportedOperation, IOError):
         # Cannot read from the stream: try via writes
         try:
-            stream.write(six.binary_type(''))
+            stream.write(compat._b(''))
         except TypeError:
             return stream.buffer
     return stream
