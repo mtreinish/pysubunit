@@ -126,6 +126,7 @@ try:
 except ImportError:
     _UnsupportedOperation = AttributeError
 
+from dateutil import parser as date_parser
 import iso8601
 import testtools
 from testtools import compat
@@ -558,8 +559,8 @@ class TestProtocolServer(object):
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
         try:
-            event_time = iso8601.parse_date(line[offset:-1])
-        except (TypeError, iso8601.ParseError) as e:
+            event_time = date_parser.parse(line[offset:-1])
+        except (TypeError, ValueError) as e:
             raise TypeError(
                 compat._u("Failed to parse %r, got %r") % (line, e))
         self.client.time(event_time)
