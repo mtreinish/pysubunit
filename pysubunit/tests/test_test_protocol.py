@@ -11,8 +11,10 @@
 # under the License.
 
 import datetime
+import io
 import os
-import unittest2 as unittest
+import sys
+import tempfile
 
 import iso8601
 import testtools
@@ -21,7 +23,7 @@ from testtools import content
 from testtools import content_type
 from testtools import matchers
 from testtools.testresult import doubles
-
+import unittest2 as unittest
 
 import pysubunit
 from pysubunit.tests import base
@@ -39,6 +41,44 @@ _remote_exception_str_chunked = ("57\r\n" + _remote_exception_str + ": boo "
 
 def details_to_str(details):
     return testtools.TestResult()._err_details_to_string(None, details=details)
+
+
+class TestHelpers(base.TestCase):
+    def test__unwrap_text_file_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'r')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             pysubunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, pysubunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_file_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'w')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             pysubunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, pysubunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'r')
+        self.assertEqual(fake_file, pysubunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'w')
+        self.assertEqual(fake_file, pysubunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_BytesIO(self):
+        fake_stream = io.BytesIO()
+        self.assertEqual(fake_stream, pysubunit._unwrap_text(fake_stream))
 
 
 class TestTestImports(base.TestCase):
