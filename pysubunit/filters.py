@@ -143,7 +143,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     if output_path is None:
         output_to = sys.stdout
     else:
-        output_to = file(output_path, 'wb')
+        output_to = open(output_path, 'wb')
 
     try:
         result = result_factory(output_to)

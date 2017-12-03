@@ -102,7 +102,7 @@ class SubunitTestProgram(testtools_run.TestProgram):
 
     def usageExit(self, msg=None):
         if msg:
-            print (msg)
+            print(msg)
         usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
                  'buffer': ''}
         if self.failfast is not False:

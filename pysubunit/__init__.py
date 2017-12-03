@@ -124,6 +124,7 @@ import unittest
 
 from dateutil import parser as date_parser
 import iso8601
+import six
 import testtools
 from testtools import compat
 from testtools.testresult.real import _StringException
@@ -1304,14 +1305,11 @@ def _make_binary_on_windows(fileno):
 def _unwrap_text(stream):
     """Unwrap stream if it is a text stream to get the original buffer."""
     exceptions = (io.UnsupportedOperation, IOError)
-    if sys.version_info > (3, 0):
-        unicode_type = str
-    else:
-        unicode_type = unicode
+    if sys.version_info < (3, 0):
         exceptions += (ValueError,)
     try:
         # Read streams
-        if type(stream.read(0)) is unicode_type:
+        if type(stream.read(0)) is six.text_type:
             return stream.buffer
     except exceptions:
         # Cannot read from the stream: try via writes
