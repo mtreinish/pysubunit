@@ -121,10 +121,6 @@ import re
 import subprocess
 import sys
 import unittest
-try:
-    from io import UnsupportedOperation as _UnsupportedOperation
-except ImportError:
-    _UnsupportedOperation = AttributeError
 
 from dateutil import parser as date_parser
 import iso8601
@@ -154,11 +150,6 @@ PROGRESS_SET = 0
 PROGRESS_CUR = 1
 PROGRESS_PUSH = 2
 PROGRESS_POP = 3
-
-
-def test_suite():
-    import subunit.tests
-    return subunit.tests.test_suite()
 
 
 def join_dir(base_path, path):
@@ -191,7 +182,7 @@ class DiscardStream(object):
     """A filelike object which discards what is written to it."""
 
     def fileno(self):
-        raise _UnsupportedOperation()
+        raise io.UnsupportedOperation()
 
     def write(self, bytes):
         pass
@@ -1296,7 +1287,7 @@ def make_stream_binary(stream):
     """
     try:
         fileno = stream.fileno()
-    except (_UnsupportedOperation, AttributeError):
+    except (io.UnsupportedOperation, AttributeError):
         pass
     else:
         _make_binary_on_windows(fileno)
@@ -1320,7 +1311,7 @@ def _unwrap_text(stream):
         # Read streams
         if type(stream.read(0)) is unicode_type:
             return stream.buffer
-    except (_UnsupportedOperation, IOError):
+    except (io.UnsupportedOperation, IOError):
         # Cannot read from the stream: try via writes
         try:
             stream.write(compat._b(''))
