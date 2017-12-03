@@ -5,5 +5,6 @@
 hacking<0.12,>=0.11.0 # Apache-2.0
 fixtures>=3.0.0
 hypothesis>=3.24.1
+mock>=2.0 # BSD
 testscenarios>=0.4
 stestr>=1.0.0

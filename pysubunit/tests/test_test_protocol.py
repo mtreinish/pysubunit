@@ -33,7 +33,7 @@ _remote_exception_repr = "testtools.testresult.real._StringException"
 _remote_exception_str = (
     "Traceback (most recent call last):\ntesttools.testresult.real."
     "_StringException")
-_remote_exception_str_chunked = ("57\r\n" + _remote_exception_str + ": boo"
+_remote_exception_str_chunked = ("57\r\n" + _remote_exception_str + ": boo "
                                  "qux\n0\r\n")
 
 

@@ -446,7 +446,7 @@ class TestByteStreamToStreamResult(base.TestCase):
                         mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                         file_name="Parser Error",
-                        file_bytes=b'UTF8 string at offset 2 extends past end '
+                        file_bytes=b'UTF8 string at offset 2 extends past end'
                                    b' of packet: claimed 63 bytes, 10 '
                                    b'available',
                         mime_type="text/plain;charset=utf8"),

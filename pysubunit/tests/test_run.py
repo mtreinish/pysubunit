@@ -13,6 +13,7 @@
 import io
 import unittest
 
+import mock
 import testtools
 from testtools.compat import _b
 from testtools.matchers import StartsWith
@@ -59,9 +60,10 @@ class TestSubunitTestRunner(base.TestCase):
         def list_test(test):
             return [], ['failed import']
 
-        self.patch(run, 'list_test', list_test)
-        exc = self.assertRaises(SystemExit, runner.list, None)
-        self.assertEqual((2,), exc.args)
+        with mock.patch('testtools.run.list_test',
+                        return_value=([], ['failed import'])):
+            exc = self.assertRaises(SystemExit, runner.list, None)
+            self.assertEqual((2,), exc.args)
 
     def test_list_includes_loader_errors(self):
         bytestream = io.BytesIO()
@@ -74,9 +76,10 @@ class TestSubunitTestRunner(base.TestCase):
             errors = ['failed import']
 
         loader = Loader()
-        self.patch(run, 'list_test', list_test)
-        exc = self.assertRaises(SystemExit, runner.list, None, loader=loader)
-        self.assertEqual((2,), exc.args)
+        with mock.patch('testtools.run.list_test', return_value=([], [])):
+            exc = self.assertRaises(SystemExit, runner.list, None,
+                                    loader=loader)
+            self.assertEqual((2,), exc.args)
 
     class FailingTest(base.TestCase):
         def test_fail(self):
