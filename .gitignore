@@ -57,3 +57,6 @@ perl/MYMETA.yml
 .stestr/
 .tox/
 .hypothesis/
+.coverage*
+cover/
+!.coveragerc
